@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # -*- encoding=utf8 -*-
 
+import random
 from os import path
 import yfinance as yf
 import pandas as pd
@@ -11,7 +12,9 @@ with open('data/revolut_tickers.txt', 'r', encoding='utf-8') as tickers_file:
     TICKERS = tickers_file.readlines()
 
 TICKERS = [t.strip() for t in TICKERS if t]
-TICKERS = TICKERS[:10]
+random.shuffle(TICKERS)
+TICKERS = TICKERS[:100]
+# TICKERS = ['TSLA', 'MSFT', 'IBM', 'NVDA', 'FB', 'GOOGL', 'SEMR']
 
 data_file_name = 'data/tickers/historical.xlsx'
 if path.exists(data_file_name):
@@ -20,10 +23,3 @@ else:
     data = yf.download(TICKERS, period='5y',
                        group_by='ticker', interval='1d')
     data.to_excel(data_file_name, index=True, header=True)
-
-for ticker in TICKERS:
-    ticker_data = data[ticker]
-    # Log2 from real price to make it smooth
-    ticker_data['CloseLog'] = np.log(ticker_data['Close'])
-
-    ticker_data.to_excel(f'data/tickers/{ticker}.xlsx', index=True, header=True)

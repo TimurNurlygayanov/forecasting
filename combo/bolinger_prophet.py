@@ -8,12 +8,14 @@ from fbprophet.plot import plot_plotly
 import plotly.express as px
 import plotly.graph_objects as go
 
+import ta
+
 from datetime import datetime
 from datetime import timedelta
 from utils import suppress_stdout_stderr
 
 
-prediction_period = 180
+prediction_period = 20
 working_days = 5 * prediction_period // 7
 
 
@@ -40,6 +42,14 @@ for ticker in TICKERS:
     last_data = ticker_data[-working_days:].reset_index()
     last_data.rename(columns={'Close': 'y', 'Date': 'ds'}, inplace=True)
 
+    ticker_data_bb = ta.utils.dropna(past_data)
+    indicator_bb = ta.volatility.BollingerBands(close=ticker_data_bb["Close"])
+
+    # Add Bollinger Bands features
+    bb_bbm = indicator_bb.bollinger_mavg()
+    bb_bbh = indicator_bb.bollinger_hband()
+    bb_bbl = indicator_bb.bollinger_lband()
+
     model = Prophet(changepoint_prior_scale=0.5)
     model.add_country_holidays(country_name='US')
 
@@ -54,32 +64,24 @@ for ticker in TICKERS:
     future = future[future['ds'].dt.weekday <= 4]
     forecast = model.predict(future)
 
-    last_closed_price = df['y'].values[-1]
-    max_predicted_price = max(forecast['yhat'][-working_days:])
-    profit = 100 * max_predicted_price / last_closed_price
-    print(f'{ticker}, {profit:.1f}%')
+    forecast_to_grow = forecast['yhat'].values[-10] < forecast['yhat'].values[-1]
+    trend_up = forecast['trend'].values[-10] < forecast['trend'].values[-1]
 
-    trend_up = False
-    if forecast['trend'].values[-working_days] * 1.1 < forecast['trend'].values[-1]:
-        trend_up = True
+    # Draw a graph to show the forecast from the last month
+    # for ~30 days and real data for the last 30 days
+    graph = go.Figure()
+    graph.add_scatter(x=df['ds'], y=df['y'],
+                      name=f'{ticker} Closed price')
+    graph.add_scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines',
+                      name='Forecast price')
+    graph.add_scatter(x=last_data['ds'], y=last_data['y'], mode='lines',
+                      name=f'{ticker} Closed price future fact')
+    # graph.add_scatter(x=forecast['ds'], y=forecast['yhat_lower'], mode='lines',
+    #                   name='Minimium forecasted price')
+    graph.add_scatter(x=forecast['ds'], y=forecast['trend'], mode='lines',
+                      name='Trend')
+    graph.add_scatter(x=df['ds'], y=bb_bbh, name='Bolinger High')
+    graph.add_scatter(x=df['ds'], y=bb_bbl, name='Bolinger Low')
 
-    if trend_up and profit > 120:
-        # Draw a graph to show the forecast from the last month
-        # for ~30 days and real data for the last 30 days
-        graph = go.Figure()
-        graph.add_scatter(x=df['ds'], y=df['y'],
-                          name=f'{ticker} Closed price')
-        graph.add_scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines',
-                          name='Forecast price')
-        graph.add_scatter(x=last_data['ds'], y=last_data['y'], mode='lines',
-                          name=f'{ticker} Closed price future fact')
-        graph.add_scatter(x=forecast['ds'], y=forecast['yhat_lower'], mode='lines',
-                          name='Minimium forecasted price')
-        graph.add_scatter(x=forecast['ds'], y=forecast['trend'], mode='lines',
-                          name='Trend')
-
-        graph.update_layout(height=1000, width=1500)
-        graph.show()
-
-        print('* ' * 20)
-        print(f'Buy: {ticker}')
+    graph.update_layout(height=1000, width=1500)
+    graph.show()
