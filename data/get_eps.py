@@ -29,6 +29,8 @@ for ticker in TICKERS:
         roe = float(data['ROE'].replace('-', '0').replace('%', ''))
         roi = float(data['ROI'].replace('-', '0').replace('%', ''))
         target_price = float(data['Target Price'].replace('-', '0'))
+        peg = float(data['PEG'].replace('-', '0'))
+        price_to_book = float(data['P/B'].replace('-', '0'))
 
         past_eps = -1
         if data['EPS past 5Y'] != '-':
@@ -54,7 +56,9 @@ for ticker in TICKERS:
                         'roi': roi,
                         'price': round(price, 2),
                         'past_eps': past_eps,
-                        'insiders': insiders_own
+                        'insiders': insiders_own,
+                        'peg': peg,
+                        'p/b': price_to_book
                     })
 
 TOP_TABLE = sorted(TOP_TABLE,

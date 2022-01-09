@@ -13,7 +13,7 @@ from datetime import timedelta
 from utils import suppress_stdout_stderr
 
 
-prediction_period = 180
+prediction_period = 14
 working_days = 5 * prediction_period // 7
 
 
@@ -26,7 +26,7 @@ TICKERS = set([t[0] for t in data.columns.values])
 for ticker in TICKERS:
     ticker_data = data[ticker]['Close']
 
-    if len(ticker_data) < 365:
+    if len(ticker_data) < 100:
         print(f'{ticker} has not enough data to make predictions')
         continue
 
@@ -55,15 +55,17 @@ for ticker in TICKERS:
     forecast = model.predict(future)
 
     last_closed_price = df['y'].values[-1]
-    max_predicted_price = max(forecast['yhat'][-working_days:])
-    profit = 100 * max_predicted_price / last_closed_price
+    min_predicted_price = forecast['yhat_lower'].values[-1]
+    profit = 100 * min_predicted_price / last_closed_price
     print(f'{ticker}, {profit:.1f}%')
 
     trend_up = False
     if forecast['trend'].values[-working_days] * 1.1 < forecast['trend'].values[-1]:
         trend_up = True
 
-    if trend_up and profit > 120:
+    # print(profit, trend_up)
+
+    if profit > 110:
         # Draw a graph to show the forecast from the last month
         # for ~30 days and real data for the last 30 days
         graph = go.Figure()

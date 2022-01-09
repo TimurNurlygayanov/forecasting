@@ -13,9 +13,9 @@ with open('data/revolut_tickers.txt', 'r', encoding='utf-8') as tickers_file:
 
 TICKERS = [t.strip() for t in TICKERS if t]
 random.shuffle(TICKERS)
-TICKERS = TICKERS[:100]
+# TICKERS = TICKERS[:100]
 # TICKERS = ['TSLA', 'MSFT', 'IBM', 'NVDA', 'FB', 'GOOGL', 'SEMR']
-TICKERS = ['BJ', 'BLNK', 'BNTX', 'CARS', 'COCO', 'DLTR', 'GME', 'GOEV', 'HYZN', 'LCID', 'M', 'MRNA', 'NBEV', 'NVAX', 'RBLX', 'TAL', 'VG']
+# TICKERS = ['BJ', 'BLNK', 'BNTX', 'CARS', 'COCO', 'DLTR', 'GME', 'GOEV', 'HYZN', 'LCID', 'M', 'MRNA', 'NBEV', 'NVAX', 'RBLX', 'TAL', 'VG']
 
 data_file_name = 'data/tickers/historical.xlsx'
 if path.exists(data_file_name):

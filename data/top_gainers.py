@@ -26,12 +26,12 @@ TOP_TICKERS = []
 for ticker in TICKERS:
     close_price = data[ticker]['Close'].values.tolist()
 
-    min_price = close_price[-10]
+    start_price = close_price[-10]
     max_price = max(close_price[-9:])
-    profit = (max_price - min_price) / min_price
+    profit = (max_price - start_price) / start_price
     if profit > 0.15:
         print('TOP gainer {0} {1:.2f}%  {2}-{3}'.format(ticker, profit,
-                                                        min_price, max_price))
+                                                        start_price, max_price))
         TOP_TICKERS.append(ticker)
 
 print(TOP_TICKERS)
