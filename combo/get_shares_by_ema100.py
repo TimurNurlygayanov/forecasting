@@ -10,8 +10,10 @@ import plotly.graph_objects as go
 from datetime import datetime
 from datetime import timedelta
 
+import ta
 
-prediction_period = 30
+
+prediction_period = 60
 working_days = 5 * prediction_period // 7
 found_shares = 0
 
@@ -40,23 +42,50 @@ for ticker in TICKERS:
     past_data = ticker_data[:-working_days].reset_index()
     last_data = ticker_data[-working_days:].reset_index()
 
-    ema_short = ticker_data.ewm(span=10, adjust=False).mean()
+    ema_short = past_data['Close'].ewm(span=10, adjust=False).mean()
     ema_long = past_data['Close'].ewm(span=200, adjust=False).mean()
 
+    ma3 = ticker_data.rolling(window=3).mean()
+    ma21 = ticker_data.rolling(window=14).mean()
+
     signal = False
+    """
     if past_data['Close'].values[-1] > ema_long.values[-1]:
-        if ema_short.values[-1] > ema_long.values[-1]:
+        if ema_short.values[-1] > ema_long.values[-1]:       # ema 10 higher ema200
+                for i in range(2, 6):
+                    if past_data['Close'].values[-i] < ema_long.values[-i]:
+                        signal = True
+                        break
+    """
+
+    ticker_data_bb = ta.utils.dropna(past_data)
+    indicator_bb = ta.volatility.BollingerBands(close=ticker_data_bb["Close"])
+
+    # Add Bollinger Bands features
+    bb_bbm = indicator_bb.bollinger_mavg()
+    bb_bbh = indicator_bb.bollinger_hband()
+    bb_bbl = indicator_bb.bollinger_lband()
+
+    """
+    if past_data['Close'].values[-1] > bb_bbl.values[-1]:
+        if past_data['Close'].values[-1] < ema_long.values[-1]:
             for i in range(2, 7):
-                if past_data['Close'].values[-i] < ema_long.values[-i]:
+                if past_data['Close'].values[-i] < bb_bbl.values[-1]:
                     signal = True
-                    break
+    """
+
+    # ignore share with high price
+    if past_data['Close'].values[-1] > 30:
+        continue
+
+    if past_data['Close'].values[-1] > ema_long.values[-1]:
+        for i in range(2, 3):
+            if past_data['Close'].values[-i] < ema_long.values[-i]:
+                signal = True
+                break
 
     if signal:
-        print(past_data['Close'].values[-1])
-        print(ema_long.values[-1])
 
-        # Draw a graph to show the forecast from the last month
-        # for ~30 days and real data for the last 30 days
         graph = go.Figure()
         graph.add_scatter(x=past_data['Date'], y=past_data['Close'],
                           name=f'{ticker} Closed price')
@@ -65,6 +94,12 @@ for ticker in TICKERS:
 
         graph.add_scatter(x=past_data['Date'], y=ema_long, mode='lines', name='EMA 150')
         graph.add_scatter(x=past_data['Date'], y=ema_short, mode='lines', name='EMA 10')
+
+        # graph.add_scatter(x=past_data['Date'], y=ma3, mode='lines', name='MA 3')
+        # graph.add_scatter(x=past_data['Date'], y=ma21, mode='lines', name='MA 21')
+
+        # graph.add_scatter(x=past_data['Date'], y=bb_bbh, name='Bolinger High')
+        # graph.add_scatter(x=past_data['Date'], y=bb_bbl, name='Bolinger Low')
 
         graph.update_layout(height=1000, width=1500)
         graph.show()
