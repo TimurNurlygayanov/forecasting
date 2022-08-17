@@ -19,7 +19,7 @@ working_days = 5 * prediction_period // 7
 
 
 ticker = 'FHN'
-data = yf.download(ticker, period='5y',
+data = yf.download(ticker, period='2y',
                    group_by='ticker', interval='1d')
 ticker_data = data['Close']
 
