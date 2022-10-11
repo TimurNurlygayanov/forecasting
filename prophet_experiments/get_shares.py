@@ -3,14 +3,9 @@ import numpy as np
 import pandas as pd
 from os import path
 from fbprophet import Prophet
-import matplotlib.pyplot as plt
-from fbprophet.plot import plot_plotly
-import plotly.express as px
 import plotly.graph_objects as go
 
-from datetime import datetime
-from datetime import timedelta
-from utils import suppress_stdout_stderr
+from prophet_experiments.utils import suppress_stdout_stderr
 
 
 prediction_period = 14
