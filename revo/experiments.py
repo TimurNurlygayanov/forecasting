@@ -34,8 +34,8 @@ def get_prediction(ticker_data):
 
 graph = go.Figure()
 
-ticker = 'CSCO'
-# ticker = 'MSFT'
+# ticker = 'CSCO'
+ticker = 'AEO'
 
 data = yf.download(ticker, period='1y',
                    group_by='ticker', interval='1d')
@@ -47,13 +47,13 @@ data['Close'] = data['Close'] / data['Close'].max()
 
 graph.add_scatter(y=data['Close'], mode='lines', name='Price')
 
-data['MA_short'] = data['Close'].rolling(window=5).mean()
+data['MA_short'] = data['Close'].rolling(window=3).mean()
 data['MA_short'] = data['MA_short'].fillna(0)
-graph.add_scatter(y=data['MA_short'], mode='lines', name='MA5')
+data['MA_long'] = data['MA_short'].rolling(window=21).mean()
+data['MA_long'] = data['MA_long'].fillna(0)
 
-test_data, forecast = get_prediction(data)
-graph.add_scatter(y=test_data, x=test_data.index, mode='lines', name='Real Data')
-graph.add_scatter(y=forecast, x=forecast.index, mode='lines', name='Forecast')
+graph.add_scatter(y=data['MA_short'], mode='lines', name='MA_short')
+graph.add_scatter(y=data['MA_long'], mode='lines', name='MA_long')
 
 
 graph.show()
