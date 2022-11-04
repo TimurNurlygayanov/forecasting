@@ -20,8 +20,8 @@ if __name__ == '__main__':
     graph = go.Figure()
 
     # ticker = 'CSCO'
-    ticker = 'AAPL'
-    # ticker = 'V'
+    # ticker = 'AAPL'
+    ticker = 'MSFT'
 
     data = yf.download(ticker, period='2y',
                        group_by='ticker', interval='1d')
@@ -38,10 +38,16 @@ if __name__ == '__main__':
     data['Date'] = data['Date'].dt.tz_localize(None)
     data_after_prediction['Date'] = data_after_prediction['Date'].dt.tz_localize(None)
 
-    data['MA_short'] = data['Close'].rolling(window=21).mean()
+    data['MA_short'] = data['Close'].rolling(window=10).mean()
     data['MA_short'] = data['MA_short'].fillna(0)
     data['MA_long'] = data['Close'].rolling(window=50).mean()
     data['MA_long'] = data['MA_long'].fillna(0)
+
+    data['MA_long100'] = data['Close'].rolling(window=100).mean()
+    data['MA_long100'] = data['MA_long100'].fillna(0)
+
+    data['MA_long200'] = data['Close'].rolling(window=200).mean()
+    data['MA_long200'] = data['MA_long200'].fillna(0)
 
     # Future data:
     graph.add_scatter(y=data_after_prediction['Close'], x=data_after_prediction['Close'].index,
@@ -52,12 +58,15 @@ if __name__ == '__main__':
     data['RSI'] = ta.rsi(data['Close'], timeperiod=14)
     data['RSI'] = data['RSI'] / 100.0
 
-    """
     bbands = ta.bbands(data['Close'], length=20, std=2.3)
     data['L'] = bbands['BBL_20_2.3']
     data['M'] = bbands['BBM_20_2.3']
     data['U'] = bbands['BBU_20_2.3']
-    """
+
+    data.ta.adx(col_names=('ADX', 'DMP', 'DMN'), append=True)
+    # graph.add_scatter(y=data['ADX'], mode='lines', name='ADX')
+    # graph.add_scatter(y=data['DMP'], mode='lines', name='DMP')
+    # graph.add_scatter(y=data['DMN'], mode='lines', name='DMN')
 
     data['EMA_short'] = data['Close'].ewm(span=10, adjust=False).mean()
     data['EMA_long'] = data['Close'].ewm(span=50, adjust=False).mean()
@@ -71,15 +80,19 @@ if __name__ == '__main__':
 
     graph.add_scatter(y=data['MA_short'], mode='lines', name='MA_short')
     graph.add_scatter(y=data['MA_long'], mode='lines', name='MA_long')
+
+    graph.add_scatter(y=data['MA_long200'], mode='lines', name='MA_long200')
+
+    graph.add_scatter(y=data['MA_long100'], mode='lines', name='MA_long100')
     # graph.add_scatter(y=data['EMA_short'], mode='lines', name='EMA_short')
     # graph.add_scatter(y=data['EMA_long'], mode='lines', name='EMA_long')
 
-    graph.add_scatter(y=data['RSI'], mode='lines', name='RSI')
+    # graph.add_scatter(y=data['RSI'], mode='lines', name='RSI')
 
     # data['RSI_MA_short'] = data['RSI'].rolling(window=20).mean()
     # graph.add_scatter(y=data['RSI_MA_short'], mode='lines', name='RSI MA')
 
-    # graph.add_scatter(y=data['L'], mode='lines', name='L')
+    graph.add_scatter(y=data['L'], mode='lines', name='L')
     # graph.add_scatter(y=data['M'], mode='lines', name='M')
     # graph.add_scatter(y=data['U'], mode='lines', name='U')
 

@@ -11,3 +11,5 @@ prophet
 ta
 
 finvizfinance
+
+vectorbt

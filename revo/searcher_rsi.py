@@ -1,4 +1,4 @@
-# The example of script that do the backtesting on simple RSI strategy:
+# The example of script that do the backtesting of naive RSI strategy:
 # 1) Buy shares when RSI crosses 35 from top to down
 # 2) Sell when you get > 5% profit from any deal
 #
@@ -17,8 +17,8 @@ import vectorbt as vbt
 
 
 RSI_PERIOD = 14
-RSI_TRESHOLD = 35
-TAKE_PROFIT_TRESHOLD = 1.05  # 7 % of price increase
+RSI_THRESHOLD = 35
+TAKE_PROFIT_THRESHOLD = 1.05  # 5 % of price increase
 
 
 def run_backtest(ticker='AAPL', period='1y'):
@@ -29,21 +29,23 @@ def run_backtest(ticker='AAPL', period='1y'):
     df = pd.DataFrame()
     df = df.ta.ticker(ticker, period=period)
 
-    df.ta.rsi(length=RSI_PERIOD, append=True)
+    df.ta.rsi(length=RSI_PERIOD, append=True, col_names=('RSI', ))
 
     for i, (index, row) in enumerate(df.iterrows()):
         buy_signals[index] = False
         sell_signals[index] = False
 
-        previous_rsi_value = df[f'RSI_{RSI_PERIOD}'].values[i-1]
-        rsi_value = df[f'RSI_{RSI_PERIOD}'].values[i]
+        previous_rsi_value = df['RSI'].values[i-1]
 
-        if rsi_value < RSI_TRESHOLD < previous_rsi_value:
+        if row['RSI'] < RSI_THRESHOLD < previous_rsi_value:
             buy_signals[index] = True
             last_buy_position = i
 
+        if row['RSI'] > 70:
+            sell_signals[index] = True
+
         # Sell as soon as we got desired profit:
-        if df['Close'].values[i] > TAKE_PROFIT_TRESHOLD * df['Close'].values[last_buy_position]:
+        if row['Close'] > TAKE_PROFIT_THRESHOLD * df['Close'].values[last_buy_position]:
             sell_signals[index] = True
 
     df['buy_signals'] = buy_signals.values()
