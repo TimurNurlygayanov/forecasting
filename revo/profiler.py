@@ -6,7 +6,6 @@ from plotly.subplots import make_subplots
 
 
 def draw(ticker, df):
-    # graph = go.Figure()
     graph = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.01,)
     graph.update_layout(title=ticker)
 
@@ -40,7 +39,7 @@ class Profiler:
     data = {}
     TAKE_PROFIT_THRESHOLD = 1.50  # if price is higher than 50% from last buy, sell it
     STOP_LOSSES_THRESHOLD = 0.92  # stop losses at 8%
-    initial_budget = 20000  # initial budget
+    initial_budget = 10000  # initial budget
     budget = 0
     positions = {}
     period = 250
@@ -48,7 +47,7 @@ class Profiler:
     def __init__(self, tickers: list, period: int):
         self.period = period
         self.budget = self.initial_budget
-        self.max_bet = self.initial_budget / 5
+        self.max_bet = self.initial_budget / 4
 
         for i, ticker in enumerate(tickers):
             df = pd.DataFrame()
@@ -146,7 +145,7 @@ class Profiler:
                         #                      key=lambda x: self.data[x]['Close'].values[i] / self.positions[x]['price'])
                         profit = self.data[ticker_to_sell]['Close'].values[i] / self.positions[ticker_to_sell]['price']
 
-                        if 100 * (1 - profit) > 5:  # sell only if profit is more than 5%
+                        if 100 * (profit - 1) < -5:  # sell only if the profit is less than -5%
                             print(f'profit calculated {profit}')
 
                             self.sell(ticker_to_sell, current_price=self.data[ticker_to_sell]['Close'].values[i], moment=i)
@@ -163,13 +162,16 @@ class Profiler:
             stats = (f'day {i}, current budget: ${self.budget:.0f}, total ${total_equity:.0f} '
                      f' profit: {100.0 * (total_equity / self.initial_budget) - 100:.2f} %'
                      f' positions: {list(self.positions.keys())}')
-            print(stats)
+            # print(stats)
 
+        for ticker in self.positions:
+            profit = 100 * (self.data[ticker]["Close"].values[-1] / self.positions[ticker]["price"] - 1)
+            print(f'{ticker} profit: {profit:.1f}')
 
 with open('smp500.txt', 'r') as f:
     TICKERS = f.readlines()
 
 TICKERS = [t.replace('\n', '') for t in TICKERS if '^' not in t and '/' not in t and '.' not in t]
 
-p = Profiler(tickers=TICKERS[:50], period=3 * 250)  # 1 year is 250 working days
+p = Profiler(tickers=TICKERS[:200], period=3 * 250)  # 1 year is 250 working days
 p.backtest()
