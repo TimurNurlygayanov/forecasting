@@ -17,82 +17,175 @@ MAX_LENGTH_FOR_BET = 20
 
 def draw(df):
     # graph = go.Figure()
-    graph = make_subplots(rows=1, cols=1)
+    graph = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.01, row_heights=[0.8, 0.2])
     graph.update_layout(title=ticker, xaxis_rangeslider_visible=False)
 
-    graph.add_candlestick(open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'])
-
-    graph.add_scatter(y=df['SMA50'], mode='lines', name='SMA50',
-                      line={'color': 'magenta'})
+    graph.add_scatter(y=df['Close'], mode='lines', name='Close',
+                      line={'color': 'green'})
     graph.add_scatter(y=df['SMA200'], mode='lines', name='SMA200',
                       line={'color': 'blue', 'width': 3})
+    graph.add_scatter(y=df['SMA50'], mode='lines', name='SMA50',
+                      line={'color': 'black', 'width': 2})
 
-    graph.add_scatter(y=df['EMA10'], mode='lines', name='EMA10',
-                      line={'color': '#34ff55'})
-    graph.add_scatter(y=df['EMA20'], mode='lines', name='EMA20',
+    """
+    graph.add_scatter(y=df['EMA7'], mode='lines', name='EMA7',
+                      line={'color': 'orange', 'width': 2})
+    graph.add_scatter(y=df['EMA32'], mode='lines', name='EMA32',
+                      line={'color': 'magenta', 'width': 2})
+    """
+
+    # graph.add_scatter(y=df['SMA50'], mode='lines', name='SMA50',
+    #                   line={'color': 'magenta'})
+    # graph.add_scatter(y=df['EMA20'], mode='lines', name='EMA20',
+    #                   line={'color': 'red'})
+
+    # graph.add_candlestick(open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'])
+
+    """
+    graph.add_scatter(y=df['SMA50'], mode='lines', name='SMA50',
+                      line={'color': 'magenta'})
+    graph.add_scatter(y=df['EMA7'], mode='lines', name='EMA7',
                       line={'color': '#ff4455'})
 
-    buy_signals = [i for i, (index, row) in enumerate(df.iterrows()) if row['buy_signals'] == True]
-    graph.add_scatter(x=buy_signals, y=df['Close'].values[buy_signals], name='Buy Signal', mode='markers',
-                      marker_symbol='triangle-up', marker_color='#00FE35', marker_size=15, row=1, col=1)
+    graph.add_scatter(y=df['EMA20'], mode='lines', name='EMA20', line={'color': 'magenta'})
+    """
 
-    sell_signals = [i for i, (index, row) in enumerate(df.iterrows()) if row['sell_signals'] == True]
-    graph.add_scatter(x=sell_signals, y=df['Close'].values[sell_signals], name='Sell Signal', mode='markers',
-                      marker_symbol='triangle-down', marker_color='#D62728', marker_size=15, row=1, col=1)
+    # graph.add_scatter(y=df['S_trend_s'], mode='lines', name='S_trend_s',
+    #                   line={'color': '#ff4040', 'width': 3}, row=1, col=1)
+    graph.add_scatter(y=df['S_trend_l'], mode='lines', name='S_trend_l SUPER TREND',
+                      line={'color': '#00ff7f', 'width': 3}, row=1, col=1)
+
+    """
+    graph.add_scatter(y=df['S_trend_l3'], mode='lines', name='S_trend_l3',
+                      line={'color': '#FF5733', 'width': 4}, row=1, col=1)
+
+    graph.add_scatter(y=df['S_trend_l7'], mode='lines', name='S_trend_l7',
+                      line={'color': '#6495ED', 'width': 4}, row=1, col=1)
+
+    graph.add_scatter(y=df['S_trend_l14'], mode='lines', name='S_trend_l14',
+                      line={'color': '#50C878', 'width': 4}, row=1, col=1)
+    """
+
+    """
+    graph.add_scatter(y=df['EMA34'], mode='lines', name='EMA34')
+
+    graph.add_scatter(y=df['L'], mode='lines', name='L', line={'color': 'red'})
+    graph.add_scatter(y=df['U'], mode='lines', name='U', line={'color': 'black'})
+    """
+
+
+    """
+    df['K'] = ((df['EMA20'] - df['EMA7']) / df['Close'] - 0.02)
+
+    bar_colors = np.array(['#bada55'] * len(df))
+    bar_colors[df['K'] < df['K'].shift(1)] = '#ff4040'
+
+    graph.add_bar(y=df['K'], name='K', row=2, col=1, marker={'color': bar_colors})
+
+    df.ta.sma(close=df['K'], length=14, append=True, col_names=('K_EMA7',))
+    """
+
+    """
+    graph.add_scatter(y=df['K'], mode='lines', name='K',
+                      line={'color': 'black'}, row=2, col=1)
+    graph.add_scatter(y=df['K2'], mode='lines', name='K2',
+                      line={'color': 'blue'}, row=2, col=1)
+
+    graph.add_scatter(y=df['RSI'], mode='lines', name='RSI', row=2, col=1)
+    graph.add_scatter(y=df['CTI'], mode='lines', name='CTI',
+                      line={'color': '#FF00DF'}, row=2, col=1)
+    """
+
+    graph.add_scatter(y=df['RSI'], mode='lines', name='RSI', row=2, col=1)
+
+    """
+    graph.add_scatter(y=df['MACD'], mode='lines', name='MACD',
+                      line={'color': 'black'}, row=2, col=1)
+    graph.add_scatter(y=df['MACD_signal'], mode='lines', name='MACD_signal',
+                      line={'color': 'red'}, row=2, col=1)
+    """
 
     graph.show()
 
 
-def run_backtest(ticker='AAPL', period='50d'):
+def run_backtest(ticker='AAPL', period='700d'):
     buy_signals = {}
     sell_signals = {}
-    last_buy_position = 0
 
     df = pd.DataFrame()
-    df = df.ta.ticker(ticker, period=period, interval="1h", auto_adjust=True)
+    df = df.ta.ticker(ticker, period=period, auto_adjust=True)  # interval="1h",
 
     df.ta.sma(length=200, append=True, col_names=('SMA200',))
     df.ta.sma(length=50, append=True, col_names=('SMA50',))
 
-    df.ta.ema(length=7, append=True, col_names=('EMA10',))
-    df.ta.ema(length=7*5, append=True, col_names=('EMA20',))
+    df.ta.ema(length=7, append=True, col_names=('EMA7',))
+    df.ta.ema(length=32, append=True, col_names=('EMA32',))
 
-    df = df[200:].copy()
+    """
+    df.ta.ema(length=3, append=True, col_names=('EMA3',))
+    df.ta.ema(length=7, append=True, col_names=('EMA7',))
+    df.ta.ema(length=14, append=True, col_names=('EMA14',))
+    df.ta.ema(length=20, append=True, col_names=('EMA20',))
+    df.ta.ema(length=34, append=True, col_names=('EMA34',))
+    """
 
-    for i, (index, row) in enumerate(df.iterrows()):
-        buy_signals[i] = False
-        sell_signals[i] = False
+    df.ta.rsi(length=RSI_PERIOD, append=True, col_names=('RSI',))
+    df.ta.cti(append=True, col_names=('CTI',))
+    # df.ta.macd(append=True, period=50, col_names=('MACD', 'MACD_hist', 'MACD_signal'))
 
-        if last_buy_position == 0 and i > 0:
-            if row['SMA50'] > row['SMA200'] and df['SMA50'].values[i-1] < df['SMA200'].values[i-1]:
-                buy_signals[i] = True
-                last_buy_position = i
+    df.ta.supertrend(append=True, multiplier=4.0, length=32,
+                     col_names=('S_trend', 'S_trend_d', 'S_trend_l', 'S_trend_s',))
 
-        if i > last_buy_position > 0:
-            # Sell as soon as we got total desired profit:
-            if row['Close'] > TAKE_PROFIT_THRESHOLD * df['Close'].values[last_buy_position]:
-                sell_signals[i] = True
-                last_buy_position = 0
+    """
+    df.ta.supertrend(append=True, multiplier=3.0,
+                     col_names=('S_trend', 'S_trend_d', 'S_trend_l3', 'S_trend_s3',))
+    df.ta.supertrend(append=True, multiplier=7.0,
+                     col_names=('S_trend', 'S_trend_d', 'S_trend_l7', 'S_trend_s7',))
+    df.ta.supertrend(append=True, multiplier=34.0,
+                     col_names=('S_trend', 'S_trend_d', 'S_trend_l14', 'S_trend_s14',))
 
-            if row['SMA50'] < row['SMA200']:
-                sell_signals[i] = True
-                last_buy_position = 0
+    df['S_trend_l3'] -= 10
+    df['S_trend_l7'] -= 13
+    df['S_trend_l14'] -= 16
+    """
 
-    df['buy_signals'] = buy_signals.values()
-    df['sell_signals'] = sell_signals.values()
+    """
+    for i in range(k_period * 2, len(df['Close'])):
+        # Calculate average volatility for the last X hours
+        # volatility = np.std(df['Close'].values[j - k_period:j])
 
-    pf = vbt.Portfolio.from_signals(df.Close, entries=df['buy_signals'], exits=df['sell_signals'], freq='D',
-                                    init_cash=10_000, fees=0.0025, slippage=0.0025)
+        # Calculate the integral
+        diff = df['EMA14'].values[i - k_period * 2:i] - df['EMA7'].values[i - k_period * 2:i]
 
-    results = pf.stats()
+        # Here we should apply some multiplayer for the recent diff values
+        df_diff = pd.DataFrame(diff, columns=['diff'])
+        df_diff.ta.ema(close=df_diff['diff'], length=5, append=True, col_names=('EMA', ))
+        df_diff = df_diff[k_period:].copy()
+
+        prob_up = df_diff[df_diff['EMA'] > 0].sum()['EMA']
+        prob_down = abs(df_diff[df_diff['EMA'] < 0].sum())['EMA']
+
+        k_indicator[i] = prob_up / (prob_up + prob_down)
+
+        # Calculate the integral
+        diff = df['EMA34'].values[i - k_period * 2:i] - df['SMA50'].values[i - k_period * 2:i]
+        df_diff = pd.DataFrame(diff, columns=['diff'])
+        df_diff.ta.ema(close=df_diff['diff'], length=k_period/2, append=True, col_names=('EMA',))
+        df_diff = df_diff[k_period:].copy()
+
+        prob_up = df_diff[df_diff['EMA'] > 0].sum()['EMA']
+        prob_down = abs(df_diff[df_diff['EMA'] < 0].sum())['EMA']
+
+        k2_indicator[i] = prob_up / (prob_up + prob_down)
+
+    df['K'] = k_indicator.values()
+    df['K2'] = k2_indicator.values()
+    """
 
     draw(df)
-
-    print(f'\n\n----\n {ticker}')
-    print(results[['Start Value', 'End Value', 'Total Return [%]', 'Total Trades', 'Win Rate [%]']])
 
 
 if __name__ == '__main__':
 
-    for ticker in ['MSFT']:
+    for ticker in ['AMD']:
         run_backtest(ticker)  # 1 year is 250 days
