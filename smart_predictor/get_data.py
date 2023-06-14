@@ -20,9 +20,8 @@ class DataCollector:
     periods = None
     labels = None
 
-    learn_period = 5
-    profit_period = 5
-    take_profit_threshold = 1.10
+    profit_period = 10
+    take_profit_threshold = 1.01
 
     def __init__(self, tickers: list, period: int):
 
