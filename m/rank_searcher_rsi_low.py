@@ -7,8 +7,8 @@ from plotly.subplots import make_subplots
 
 
 RANK = {}
-TAKE_PROFIT_THRESHOLD = 1.05  # 5 % of price increase
-STOP_LOSSES_THRESHOLD = 0.98  # 2% risk
+TAKE_PROFIT_THRESHOLD = 1.02  # 4 % of price increase
+STOP_LOSSES_THRESHOLD = 0.99  # 2% risk
 
 
 def run_backtest(ticker='AAPL', period='700d'):
@@ -21,11 +21,14 @@ def run_backtest(ticker='AAPL', period='700d'):
     df = pd.DataFrame()
     df = df.ta.ticker(ticker, period=period, interval='1h')
 
-    df.ta.ema(length=21, append=True, col_names=('EMA21',))
-    df.ta.ema(length=5, append=True, col_names=('EMA5',))
-    # df.ta.rsi(length=14, append=True, col_names=('RSI',))
+    df.ta.ema(length=200, append=True, col_names=('EMA200',))
+    df.ta.ema(length=50, append=True, col_names=('EMA50',))
+    df.ta.rsi(length=14, append=True, col_names=('RSI',))
 
-    # df.ta.macd(append=True, col_names=('MACD', 'MACD_hist', 'MACD_signal'))
+    # df.ta.wma(close=df['Low'], length=5, offset=5, append=True, col_names=('WMA3',))
+
+    df.ta.supertrend(append=True, length=10, multiplier=3.0,
+                     col_names=('S_trend', 'S_trend_d', 'S_trend_l', 'S_trend_s',))
 
     df = df[200:].copy()
 
@@ -38,7 +41,7 @@ def run_backtest(ticker='AAPL', period='700d'):
         sell_signals[i] = False
 
         if last_buy_position == 0:
-            if row['EMA5'] > row['EMA21'] and df['EMA5'].values[i-1] < df['EMA21'].values[i-1]:
+            if row['RSI'] < 33:
                 buy_signals[i] = True
                 last_buy_position = i
                 purchase_price = row['Close']
@@ -47,6 +50,10 @@ def run_backtest(ticker='AAPL', period='700d'):
                 take_profit_price = purchase_price * TAKE_PROFIT_THRESHOLD
 
         if i > last_buy_position > 0:
+
+            if row['S_trend_d'] < 0:
+                sell_signals[i] = True
+                last_buy_position = 0
 
             if row['High'] > take_profit_price:
                 sell_signals[i] = True

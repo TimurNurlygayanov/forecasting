@@ -21,20 +21,20 @@ take_profit = 1.1
 bet_period = 30 * 8
 """
 
-stop_loss = 0.95
-take_profit = 1.1
-bet_period = 7 * 20
+stop_loss = 0.99
+take_profit = 1.02
+bet_period = 10
 atr_steps = 0.6
-risk_ratio = 2
+risk_ratio = 3
 evaluation_period = 200
-iterations = 1000
-learning_rate = 0.1
+iterations = 100000
+learning_rate = 0.01
 
 columns = ['Close', 'Open', 'High', 'Low', 'S_trend', 'EMA3', 'EMA7', 'EMA20', 'SMA50',
            'RSI', 'ATR', 'S_trend_d', 'L', 'U', 'MACD', 'MACD_hist', 'MACD_signal', 'CTI',
            'WMA9', 'WMA14', 't1', 't2', 't3']
 
-model = CatBoostClassifier(iterations=iterations, learning_rate=learning_rate, loss_function='Logloss')
+model = CatBoostClassifier(iterations=iterations, learning_rate=learning_rate, loss_function='Logloss', depth=10)
 # model = LogisticRegression()
 
 
@@ -119,8 +119,6 @@ def get_data(ticker='MSFT'):
                 break
             elif df['High'][i] >= current_price * take_profit:
                 result = 1
-
-                print(f'profit: {100 * (take_profit - current_price) / current_price}')
                 break
 
         df.at[index, 'target'] = result
@@ -138,7 +136,7 @@ def train_model(df):
 
     print(X.shape[0], y.sum())
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
 
     model.fit(X_train, y_train, eval_set=(X_test, y_test), verbose=False)
 
@@ -230,6 +228,9 @@ accuracy, precision, f1 = evaluate_model(df2)
 
 # print(df2.tail(30))
 # print(df2.columns)
+
+for i in range(10):
+    print(df2['Date'][i])
 
 if f1 > best_f1:
     best_f1 = f1

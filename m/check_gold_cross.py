@@ -2,13 +2,13 @@
 import numpy as np
 import pandas as pd
 import pandas_ta  # for TA magic
-import vectorbt as vbt
 from plotly.subplots import make_subplots
 
+from bot.utils import get_data
 
 RANK = {}
-TAKE_PROFIT_THRESHOLD = 1.05  # 5 % of price increase
-STOP_LOSSES_THRESHOLD = 0.98  # 2% risk
+TAKE_PROFIT_THRESHOLD = 1.1  # 10 % of price increase
+STOP_LOSSES_THRESHOLD = 0.9  # 10% risk
 
 
 def run_backtest(ticker='AAPL', period='700d'):
@@ -17,15 +17,12 @@ def run_backtest(ticker='AAPL', period='700d'):
     last_buy_position = 0
     good_deals = 0
     bad_deals = 0
+    total_sum = 1000
 
-    df = pd.DataFrame()
-    df = df.ta.ticker(ticker, period=period, interval='1h')
+    df = get_data(ticker)
 
-    df.ta.ema(length=21, append=True, col_names=('EMA21',))
-    df.ta.ema(length=5, append=True, col_names=('EMA5',))
-    # df.ta.rsi(length=14, append=True, col_names=('RSI',))
-
-    # df.ta.macd(append=True, col_names=('MACD', 'MACD_hist', 'MACD_signal'))
+    if df is None:
+        return total_sum
 
     df = df[200:].copy()
 
@@ -38,7 +35,18 @@ def run_backtest(ticker='AAPL', period='700d'):
         sell_signals[i] = False
 
         if last_buy_position == 0:
-            if row['EMA5'] > row['EMA21'] and df['EMA5'].values[i-1] < df['EMA21'].values[i-1]:
+            """
+            if row['EMA50'] > row['EMA200'] and df['EMA50'].values[i-1] < df['EMA200'].values[i-1]:
+                buy_signals[i] = True
+                last_buy_position = i
+                purchase_price = row['Close']
+
+                stop_loss_price = purchase_price * STOP_LOSSES_THRESHOLD
+                take_profit_price = purchase_price * TAKE_PROFIT_THRESHOLD
+            """
+            if row['RSI'] > 30 > df['RSI'].values[i-1]:
+                # if row['S_trend_d'] > 0 and row['S_trend_d_x'] > 0:
+                #     if df['S_trend_d'].values[i-1] < 0 or df['S_trend_d_x'].values[i-1] < 0:
                 buy_signals[i] = True
                 last_buy_position = i
                 purchase_price = row['Close']
@@ -54,20 +62,22 @@ def run_backtest(ticker='AAPL', period='700d'):
 
                 good_deals += 1
 
+                total_sum *= TAKE_PROFIT_THRESHOLD
+
             if row['Low'] < stop_loss_price:
                 sell_signals[i] = True
                 last_buy_position = 0
 
                 bad_deals += 1
 
+                total_sum *= STOP_LOSSES_THRESHOLD
+
     df['buy_signals'] = buy_signals.values()
     df['sell_signals'] = sell_signals.values()
 
-    print(ticker, ' GOOD / BAD: ', good_deals, bad_deals)
+    print(ticker, ' GOOD / BAD: ', good_deals, bad_deals, total_sum)
 
-    K = 0 if not bad_deals else good_deals / bad_deals
-
-    return K
+    return total_sum
 
 
 if __name__ == '__main__':
@@ -76,13 +86,11 @@ if __name__ == '__main__':
         TICKERS = f.readlines()
 
     TICKERS = [t.replace('\n', '') for t in TICKERS if '^' not in t and '/' not in t and '.' not in t]
-    TICKERS.remove('CEG')
-    TICKERS.remove('ELV')
     TICKERS.remove('TSLA')
 
-    for ticker in TICKERS[:20]:
-        result = run_backtest(ticker, period='700d')
+    for ticker in TICKERS[:100]:
+        result = run_backtest(ticker, period='565d')
         RANK[ticker] = result
 
-
-print(sorted(RANK, key=lambda x: RANK[x], reverse=True)[:10])
+    print('Total:')
+    print(sum(RANK.values()) / (1000*len(TICKERS[:100])))

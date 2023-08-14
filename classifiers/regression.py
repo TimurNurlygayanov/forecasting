@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from plotly.subplots import make_subplots
 
-bet_period = 10
+bet_period = 14
 sample_period = 200
 
 
@@ -90,7 +90,7 @@ def get_data(df):
                 low_stop_loss = df['Low'][index + i]
 
             if df['Close'][index + i] > high_close:
-                high_close = df['Close'][index + i]
+                high_close = df['EMA7'][index + i]
 
         y1.append(low_stop_loss)
         y2.append(high_close)
@@ -108,7 +108,7 @@ X, y1, y2 = get_data(df)  # Replace with your own dataset loading code
 # Split the data into training and testing sets
 X_train, X_test, y2_train, y2_test = train_test_split(X, y2, test_size=0.1, random_state=42)
 # Create and train the CatBoost regression model
-model = CatBoostRegressor(iterations=1000, learning_rate=0.01, depth=10)
+model = CatBoostRegressor(iterations=10000, learning_rate=0.01, depth=10)
 model.fit(X_train, y2_train, verbose=False)
 # Make predictions on the test set
 y2_pred = model.predict(to_predict)
@@ -116,7 +116,7 @@ y2_pred = model.predict(to_predict)
 # Split the data into training and testing sets
 X_train, X_test, y1_train, y1_test = train_test_split(X, y1, test_size=0.1, random_state=42)
 # Create and train the CatBoost regression model
-model = CatBoostRegressor(iterations=1000, learning_rate=0.1, depth=3)
+model = CatBoostRegressor(iterations=1000, learning_rate=0.001, depth=10)
 model.fit(X_train, y1_train, verbose=False)
 # Make predictions on the test set
 y1_pred = model.predict(to_predict)

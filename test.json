@@ -1,0 +1,1832 @@
+{
+    "next_batch": "rzzobif.rytdob",
+    "account_data": {},
+    "presence": {},
+    "rooms": {
+        "join": {
+            "!-9QuOWjQTBquhc2xEIs20g:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": [
+                        {
+                            "content": {
+                                "displayname": "t2_1qwk",
+                                "membership": "join"
+                            },
+                            "event_id": "$O7bQjC4J0QKBkIlXXtDH5cUw1mJbIJgqklGQRBZfCko",
+                            "origin_server_ts": 1679618102706,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "@t2_1qwk:reddit.com",
+                            "type": "m.room.member"
+                        }
+                    ]
+                },
+                "timeline": {
+                    "events": [
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_hw",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/hw/Perm-Test",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$HwB8v7gc6MRLix9a6eJcaXAEt-QfR0aSvTVq7rzIgAc",
+                            "origin_server_ts": 1691019077500,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_hw",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_o00yh2fn0eab1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/hw/Perm-Test",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$SX1NScjmlt0XpblDSAX_fZYnUBU3zMjfY6wT8ujIk80"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_hw",
+                                "icon": "https://reddit-subreddit-uploaded-media.s3-accelerate.amazonaws.com/t5_7bf0ce/styles/communityIcon_l7sxewmjqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/hw/Perm-Test",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$kiVaz_9qUJJFrfCK8R6Tq5rSI84ZeBbUFxIzkqdp0bg",
+                            "origin_server_ts": 1691019131974,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_hw",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/hw/Perm-Test",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$HwB8v7gc6MRLix9a6eJcaXAEt-QfR0aSvTVq7rzIgAc"
+                            }
+                        }
+                    ],
+                    "limited": false,
+                    "prev_batch": "t284_1691019078549"
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": []
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 0
+                }
+            },
+            "!2iL-zsxlQn-IgWbJ07yVjA:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": []
+                },
+                "timeline": {
+                    "events": [],
+                    "limited": false
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": [
+                        {
+                            "content": {
+                                "event_id": "$QYuzgA2DfKAyxp9610ZpMwHA-uic7mdmNUyhyAMM1eo"
+                            },
+                            "type": "m.fully_read"
+                        }
+                    ]
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 0
+                }
+            },
+            "!D2TLy0CSQNOYDuQRqey4tg:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": []
+                },
+                "timeline": {
+                    "events": [],
+                    "limited": false
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": [
+                        {
+                            "content": {
+                                "event_id": "$BEewXannisqrOmhWG0FkUkhXUwOqKSmMhJORN3Uevoc"
+                            },
+                            "type": "m.fully_read"
+                        }
+                    ]
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 0
+                }
+            },
+            "!IYNmStyWSb69MNZcEWldnQ:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": [
+                        {
+                            "content": {
+                                "displayname": "t2_1qwk",
+                                "membership": "join"
+                            },
+                            "event_id": "$sqr-fraPUh-3j75rpUd9jK7zKE3fFAFsFWlyJ2xeR8U",
+                            "origin_server_ts": 1680274695478,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "@t2_1qwk:reddit.com",
+                            "type": "m.room.member"
+                        }
+                    ]
+                },
+                "timeline": {
+                    "events": [
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_t6",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/t6/test466777",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$23dNcs88ZjYfFRP2wHSUe3WRbDUhqXj-0pxMjI6GKnY",
+                            "origin_server_ts": 1691019077507,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "age": 45366291,
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_t6",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_o00yh2fn0eab1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/t6/test466777",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$ycT4W4tkqUggeFKZA_csYDgwl3BIT0w1HlFF12hAFg8"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_t6",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/t6/test466777",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$BjD_ljiUZq-jdVKDeSaqAtbDPcDtV97WgBVsM9r7ncs",
+                            "origin_server_ts": 1691019077654,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "age": 45366144,
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_t6",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/t6/test466777",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$23dNcs88ZjYfFRP2wHSUe3WRbDUhqXj-0pxMjI6GKnY"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_t6",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/t6/test466777",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$dN-Ns0Hlf0scqG_e-8o5TkeMEG3hVb4QJJD8fnbJ9IA",
+                            "origin_server_ts": 1691019077865,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "age": 45365933,
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_t6",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/t6/test466777",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$BjD_ljiUZq-jdVKDeSaqAtbDPcDtV97WgBVsM9r7ncs"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_t6",
+                                "icon": "https://reddit-subreddit-uploaded-media.s3-accelerate.amazonaws.com/t5_7bf0ce/styles/communityIcon_l7sxewmjqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/t6/test466777",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$9mup2l5EaHVrSX9Kxbj3XQSz47TvT5kG8suOIp6KRQI",
+                            "origin_server_ts": 1691019131968,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "age": 45311830,
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_t6",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/t6/test466777",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$dN-Ns0Hlf0scqG_e-8o5TkeMEG3hVb4QJJD8fnbJ9IA"
+                            }
+                        }
+                    ],
+                    "limited": false,
+                    "prev_batch": "t208_1691019078551"
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": []
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 0
+                }
+            },
+            "!LEckxK7aSMyoRtq3p2aX6A:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": []
+                },
+                "timeline": {
+                    "events": [],
+                    "limited": false
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": [
+                        {
+                            "content": {
+                                "event_id": "$cFOxc99CQ6stN8SFkw5WV7McIXYDLlI2zDS4X90k75g"
+                            },
+                            "type": "m.fully_read"
+                        }
+                    ]
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 0
+                }
+            },
+            "!MgXTtG49Q9CKgyw6QGlidQ:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": [
+                        {
+                            "content": {
+                                "avatar_url": "",
+                                "displayname": "rtypagirl",
+                                "membership": "join"
+                            },
+                            "event_id": "$v8LQtx76uYCtzMfnPk_oGlQA-gIe0_z4OVsakeD8p0s",
+                            "origin_server_ts": 1687540355198,
+                            "sender": "@t2_dsn591b8h:reddit.com",
+                            "state_key": "@t2_dsn591b8h:reddit.com",
+                            "type": "m.room.member"
+                        },
+                        {
+                            "content": {
+                                "avatar_url": "",
+                                "displayname": "AvgAs1an",
+                                "membership": "join"
+                            },
+                            "event_id": "$vO4re740FUkUw4GjKlZ7Kk0NrHpDZowxf6j0Fwh-j_E",
+                            "origin_server_ts": 1690251952603,
+                            "sender": "@t2_42djmh0r:reddit.com",
+                            "state_key": "@t2_42djmh0r:reddit.com",
+                            "type": "m.room.member",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "avatar_url": "",
+                                "displayname": "KnotlessPizza",
+                                "membership": "join"
+                            },
+                            "event_id": "$oCWRy8KkAJcSa-62EBzxktW1rn4Zat7zjU1Zj8kxwKo",
+                            "origin_server_ts": 1690836518252,
+                            "sender": "@t2_gfks6kbam:reddit.com",
+                            "state_key": "@t2_gfks6kbam:reddit.com",
+                            "type": "m.room.member",
+                            "unsigned": {
+                                "prev_content": {
+                                    "membership": "leave"
+                                },
+                                "prev_sender": "@t2_gfks6kbam:reddit.com",
+                                "replaces_state": "$utMHdBYjf0m6gm0YbmP76aUAREi5VrmvS6uQ8hwJP3o"
+                            }
+                        },
+                        {
+                            "content": {
+                                "avatar_url": "",
+                                "displayname": "Impressive_Phase_600",
+                                "membership": "join"
+                            },
+                            "event_id": "$m9QV88Fr99VgiSxyolckJ_8dsokNAk_Y_32oBIUJgUo",
+                            "origin_server_ts": 1691057484188,
+                            "sender": "@t2_u07ksrvg:reddit.com",
+                            "state_key": "@t2_u07ksrvg:reddit.com",
+                            "type": "m.room.member",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        }
+                    ]
+                },
+                "timeline": {
+                    "events": [
+                        {
+                            "content": {
+                                "body": "u/rtypagirl I'll make it 1001, I'm an overachiever",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$xZyeOP6XiEuwrXsnlQTLst_sHqIyWAJb9IZL95JMGzU",
+                            "origin_server_ts": 1691064152214,
+                            "sender": "@t2_gfks6kbam:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "u/AvgAs1an thats gotta be a crime",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$wCYnrSUExg373BA0J5T-DKBpakqM2A3P_ugaJ59rmf0",
+                            "origin_server_ts": 1691064164748,
+                            "sender": "@t2_gfks6kbam:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "@AvgAs1an do you know what goes well on my pizza",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$MQ6umcb0C4Yhl9Q9ApojzOvX2vIcc7sMGa6JsgqWjfw",
+                            "origin_server_ts": 1691064214569,
+                            "sender": "@t2_dsn591b8h:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "@KnotlessPizza it is actually pretty good just don’t put marinara sauce on it. try it with cheese and banana",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$wmvRfrBBVEJKoBpYeuOwMwnPAsXl5rzcDhLZoa06b5w",
+                            "origin_server_ts": 1691064227103,
+                            "sender": "@t2_42djmh0r:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "like white pizza",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$xNH-gim-0YbWHZkzHMzSaG4fOzbDkiPOu-hbEhyErCM",
+                            "origin_server_ts": 1691064241364,
+                            "sender": "@t2_42djmh0r:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "@rtypagirl do I wanna know?",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$BbTo2aUtHsq5irEavuoPvzdDUfFn5_oakxNAtvEw1uY",
+                            "origin_server_ts": 1691064258594,
+                            "sender": "@t2_42djmh0r:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "u/AvgAs1an that makes more sense",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$phGX5VQvhs7MzyQiGKdOaywJOgeUTcT2jjzCTcPfWyw",
+                            "origin_server_ts": 1691064260474,
+                            "sender": "@t2_gfks6kbam:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "@AvgAs1an its you",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$G_JwZfetTQ9ezOA4ziOL9yd7SUjAihv7jRWU8dHqQbg",
+                            "origin_server_ts": 1691064274507,
+                            "sender": "@t2_dsn591b8h:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "@KnotlessPizza i look forward to your 1001 words report",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$POj79nJ7RbTmVP20_ZU2I8bSY3OjekAb3N1zLhH9k44",
+                            "origin_server_ts": 1691064314572,
+                            "sender": "@t2_dsn591b8h:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "m.relates_to": {
+                                    "event_id": "$G_JwZfetTQ9ezOA4ziOL9yd7SUjAihv7jRWU8dHqQbg",
+                                    "key": "foyijyyga7081.gif",
+                                    "rel_type": "m.annotation"
+                                }
+                            },
+                            "event_id": "$40qwJlvEieo4RDJKutKJJYV95qVjTIu6qZHlZxkTNLY",
+                            "origin_server_ts": 1691064318605,
+                            "sender": "@t2_gfks6kbam:reddit.com",
+                            "type": "m.reaction",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "banana pizza",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$d4lx4B9PSsESO7P99_iaGB9hP300zLGnPhhuRl9SKTo",
+                            "origin_server_ts": 1691064334588,
+                            "sender": "@t2_u07ksrvg:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "Yes",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$8QGRg35Vr5DK87RDX5ycOSmg6PolVU6xD5GBxUeH8kc",
+                            "origin_server_ts": 1691064335557,
+                            "sender": "@t2_u07ksrvg:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "@rtypagirl not sure if I should be happy or not. I am not very edible",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$dDttFrqoAL0xHB0Hbfq11IhPe_NTwu26GULPkLBuMWg",
+                            "origin_server_ts": 1691064342216,
+                            "sender": "@t2_42djmh0r:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "m.relates_to": {
+                                    "event_id": "$phGX5VQvhs7MzyQiGKdOaywJOgeUTcT2jjzCTcPfWyw",
+                                    "key": "foyijyyga7081.gif",
+                                    "rel_type": "m.annotation"
+                                }
+                            },
+                            "event_id": "$zzIEkR96Qw41I4sPKJS6U4b4IDhvnN0gjK0MR6yLDEM",
+                            "origin_server_ts": 1691064383603,
+                            "sender": "@t2_42djmh0r:reddit.com",
+                            "type": "m.reaction",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "m.relates_to": {
+                                    "event_id": "$G_JwZfetTQ9ezOA4ziOL9yd7SUjAihv7jRWU8dHqQbg",
+                                    "key": "foyijyyga7081.gif",
+                                    "rel_type": "m.annotation"
+                                }
+                            },
+                            "event_id": "$zyXlHm03viJ6T_sEtgCezPCxDqaK1vjeCSqsN6yUoPE",
+                            "origin_server_ts": 1691064391138,
+                            "sender": "@t2_42djmh0r:reddit.com",
+                            "type": "m.reaction",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "I paid well with pizza lol",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$ExOQUKJz85z3YsGJYUmrMvDQUDOhuKBI1sESHZzbia4",
+                            "origin_server_ts": 1691064409870,
+                            "sender": "@t2_42djmh0r:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "pair**",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$aZZ_1ahEXPliY7d5sfcrzg0nIdUREsULpjdemESQmuE",
+                            "origin_server_ts": 1691064417691,
+                            "sender": "@t2_42djmh0r:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "you do huh?",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$Zo3FJouwWImZeOTrUibyoUZd9K--8Msy3idfUyPV3k4",
+                            "origin_server_ts": 1691064429989,
+                            "sender": "@t2_gfks6kbam:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "Yeah so get on my pizza now",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$Ag9GCdbST0bqiEMWhUZOWTILmu_6uWwl-Vo0wtWDG-I",
+                            "origin_server_ts": 1691064435119,
+                            "sender": "@t2_dsn591b8h:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_2vfcm"
+                            }
+                        }
+                    ],
+                    "limited": false,
+                    "prev_batch": "t208433_1691064153231"
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": []
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 0
+                }
+            },
+            "!V4HWvV7ZTXyln1nn6Xu9QQ:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": [
+                        {
+                            "content": {
+                                "displayname": "t2_1qwk",
+                                "membership": "join"
+                            },
+                            "event_id": "$nqPAY7XzWeVNlC9-jvW57sWtaHkWVN1qWfxNLXyvb8U",
+                            "origin_server_ts": 1679421437422,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "@t2_1qwk:reddit.com",
+                            "type": "m.room.member"
+                        }
+                    ]
+                },
+                "timeline": {
+                    "events": [
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_bc",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": true,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/bc/is_restricted",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$bfNzMeuT9KlNDQNcsgKfIXmXNuLiSyfeJOla207HjW4",
+                            "origin_server_ts": 1691019077501,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_bc",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_o00yh2fn0eab1.png",
+                                    "is_restricted": true,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/bc/is_restricted",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$-8KgSFvMSenB5tEWrvhNm79d1SxkPb2asU_Ljc7RMgk"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_bc",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": true,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/bc/is_restricted",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$jOS1C1ffyEGMqDllH9MlnUQZofff5h--sl5WNYNZMAY",
+                            "origin_server_ts": 1691019077654,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_bc",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": true,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/bc/is_restricted",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$bfNzMeuT9KlNDQNcsgKfIXmXNuLiSyfeJOla207HjW4"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_bc",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": true,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/bc/is_restricted",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$h7WKPtNcC4HAAWynp5JWN1AbYg9PKUmv_Sfbegzl5QM",
+                            "origin_server_ts": 1691019077942,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_bc",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": true,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/bc/is_restricted",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$jOS1C1ffyEGMqDllH9MlnUQZofff5h--sl5WNYNZMAY"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_bc",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": true,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/bc/is_restricted",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$qd9nUCJ9Rt8U_OpxoZ860jVEGMCj57a-pgKbUXnt91I",
+                            "origin_server_ts": 1691019078295,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_bc",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": true,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/bc/is_restricted",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$h7WKPtNcC4HAAWynp5JWN1AbYg9PKUmv_Sfbegzl5QM"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_bc",
+                                "icon": "https://reddit-subreddit-uploaded-media.s3-accelerate.amazonaws.com/t5_7bf0ce/styles/communityIcon_l7sxewmjqqfb1.png",
+                                "is_restricted": true,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/bc/is_restricted",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$QGXqTBeznCYBcljVWPCzq0WzRJ4e-2wngtZS3e0oThA",
+                            "origin_server_ts": 1691019131970,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_bc",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": true,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/bc/is_restricted",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$qd9nUCJ9Rt8U_OpxoZ860jVEGMCj57a-pgKbUXnt91I"
+                            }
+                        }
+                    ],
+                    "limited": false,
+                    "prev_batch": "t116_1691019078549"
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": []
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 0
+                }
+            },
+            "!V_paaRf7SZC3xxs6OpfpQw:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": [
+                        {
+                            "content": {
+                                "avatar_url": "",
+                                "displayname": "monoweb",
+                                "membership": "join"
+                            },
+                            "event_id": "$gFRu3lQAsdPcbqKh-BBbL9XJp0tRhc3b-nb8reREIN8",
+                            "origin_server_ts": 1685090288179,
+                            "sender": "@t2_bwzsu4fs:reddit.com",
+                            "state_key": "@t2_bwzsu4fs:reddit.com",
+                            "type": "m.room.member",
+                            "unsigned": {
+                                "prev_content": {
+                                    "displayname": "monoweb",
+                                    "membership": "invite"
+                                },
+                                "prev_sender": "@t2_kpk7zfnq:reddit.com",
+                                "replaces_state": "$nDJVUkVtTiJKbKlObDuuSV1G_WGL9FygHmosT8Y1yVw"
+                            }
+                        },
+                        {
+                            "content": {
+                                "avatar_url": "",
+                                "displayname": "StasDemydiuk",
+                                "membership": "join"
+                            },
+                            "event_id": "$FkvFdk5FBu7oScGLNRsGg7WhHiMgfWA-vAsjxUctHJk",
+                            "origin_server_ts": 1690369155451,
+                            "sender": "@t2_bwzh427v:reddit.com",
+                            "state_key": "@t2_bwzh427v:reddit.com",
+                            "type": "m.room.member",
+                            "unsigned": {
+                                "prev_content": {
+                                    "displayname": "StasDemydiuk",
+                                    "membership": "invite"
+                                },
+                                "prev_sender": "@t2_bwzsu4fs:reddit.com",
+                                "replaces_state": "$bMHV27l-4PGVjotjp-s41QNBj19t5RHl4it3bUlo1zY"
+                            }
+                        }
+                    ]
+                },
+                "timeline": {
+                    "events": [
+                        {
+                            "content": {
+                                "body": "3",
+                                "m.relates_to": {
+                                    "event_id": "$CIZb6eZ8SSJrtHbQrN9bQa0Yi7VdUAcgAar1bvMteuA",
+                                    "is_falling_back": true,
+                                    "m.in_reply_to": {
+                                        "event_id": "$uEGGjp27KoCCjuVBX45ekpRSwPrFd_2b-t2fB9qm5f0"
+                                    },
+                                    "rel_type": "m.thread"
+                                },
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$EkyT6LwCqkXYjuwiELCn7Wg_IK7u-80_zwsZOVA27BY",
+                            "origin_server_ts": 1691064338025,
+                            "sender": "@t2_bwzsu4fs:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "age": 105777
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "4",
+                                "m.relates_to": {
+                                    "event_id": "$CIZb6eZ8SSJrtHbQrN9bQa0Yi7VdUAcgAar1bvMteuA",
+                                    "is_falling_back": true,
+                                    "m.in_reply_to": {
+                                        "event_id": "$EkyT6LwCqkXYjuwiELCn7Wg_IK7u-80_zwsZOVA27BY"
+                                    },
+                                    "rel_type": "m.thread"
+                                },
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$o_JHEhbJGfxojSRJo1Cb4yH2aTwIUbpfCp5bC4aUdpg",
+                            "origin_server_ts": 1691064350798,
+                            "sender": "@t2_bwzh427v:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "age": 93004
+                            }
+                        },
+                        {
+                            "content": {
+                                "body": "Test",
+                                "msgtype": "m.text"
+                            },
+                            "event_id": "$CIZb6eZ8SSJrtHbQrN9bQa0Yi7VdUAcgAar1bvMteuA",
+                            "origin_server_ts": 1691062096666,
+                            "sender": "@t2_bwzh427v:reddit.com",
+                            "type": "m.room.message",
+                            "unsigned": {
+                                "age": 2347136,
+                                "com.reddit.redelivered": true,
+                                "m.relations": {
+                                    "m.thread": {
+                                        "com.reddit.thread_heroes_user_ids": [
+                                            "@t2_bwzsu4fs:reddit.com",
+                                            "@t2_bwzh427v:reddit.com"
+                                        ],
+                                        "count": 4,
+                                        "current_user_participated": false,
+                                        "latest_event": {
+                                            "content": {
+                                                "body": "4",
+                                                "m.relates_to": {
+                                                    "event_id": "$CIZb6eZ8SSJrtHbQrN9bQa0Yi7VdUAcgAar1bvMteuA",
+                                                    "is_falling_back": true,
+                                                    "m.in_reply_to": {
+                                                        "event_id": "$EkyT6LwCqkXYjuwiELCn7Wg_IK7u-80_zwsZOVA27BY"
+                                                    },
+                                                    "rel_type": "m.thread"
+                                                },
+                                                "msgtype": "m.text"
+                                            },
+                                            "event_id": "$o_JHEhbJGfxojSRJo1Cb4yH2aTwIUbpfCp5bC4aUdpg",
+                                            "origin_server_ts": 1691064350798,
+                                            "sender": "@t2_bwzh427v:reddit.com",
+                                            "type": "m.room.message"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "limited": false,
+                    "prev_batch": "t1083_1691062097683"
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": []
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 9
+                }
+            },
+            "!WPG1qDskRpSIgn3ph-rkCQ:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": [
+                        {
+                            "content": {
+                                "displayname": "t2_1qwk",
+                                "membership": "join"
+                            },
+                            "event_id": "$l_67b1hASrXqrG4So1MOpI9jC361I2GjR6OXU10Bug8",
+                            "origin_server_ts": 1682619032332,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "@t2_1qwk:reddit.com",
+                            "type": "m.room.member"
+                        }
+                    ]
+                },
+                "timeline": {
+                    "events": [
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_1d0",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1d0/CraigTestChannel",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$QiEoLSkzkQQRs9UQzyVQaiAAlCQZJD6zWzI7vfVznq0",
+                            "origin_server_ts": 1691019077503,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_1d0",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_o00yh2fn0eab1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1d0/CraigTestChannel",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$em7bjNj5DF-qIzR-ZoJH6XJXLSJjnavVhbeKQIXUPFw"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_1d0",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1d0/CraigTestChannel",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$ucGqs98TduUU_cauabi9QtsPLVcDlG0LCgfYVtYMbcY",
+                            "origin_server_ts": 1691019077863,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_1d0",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1d0/CraigTestChannel",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$QiEoLSkzkQQRs9UQzyVQaiAAlCQZJD6zWzI7vfVznq0"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_1d0",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1d0/CraigTestChannel",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$hBY2qUvUVcSTYhZKsp-kP_eMpX-EWB2_iAIsjez2DU0",
+                            "origin_server_ts": 1691019078296,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_1d0",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1d0/CraigTestChannel",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$ucGqs98TduUU_cauabi9QtsPLVcDlG0LCgfYVtYMbcY"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_1d0",
+                                "icon": "https://reddit-subreddit-uploaded-media.s3-accelerate.amazonaws.com/t5_7bf0ce/styles/communityIcon_l7sxewmjqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1d0/CraigTestChannel",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$116O2KeK-9a_z-BEOpPWL180Mdpkur71kp1_23v_x-8",
+                            "origin_server_ts": 1691019131970,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_1d0",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1d0/CraigTestChannel",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$hBY2qUvUVcSTYhZKsp-kP_eMpX-EWB2_iAIsjez2DU0"
+                            }
+                        }
+                    ],
+                    "limited": false,
+                    "prev_batch": "t137_1691019078541"
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": []
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 0
+                }
+            },
+            "!ajdGfyDsQ5GJFXYN5YhRPg:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": [
+                        {
+                            "content": {
+                                "displayname": "t2_1qwk",
+                                "membership": "join"
+                            },
+                            "event_id": "$BLjyGyCiG40D2KXYufXMi8utVovubMx5SJ3Uf54wRhE",
+                            "origin_server_ts": 1680798782966,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "@t2_1qwk:reddit.com",
+                            "type": "m.room.member"
+                        }
+                    ]
+                },
+                "timeline": {
+                    "events": [
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_14c",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/14c/thur_april_6",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$piEVK-QuT2xW-a7j7gYLWEw1guS1eq667EcrIRPEW7A",
+                            "origin_server_ts": 1691019077506,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_14c",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_o00yh2fn0eab1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/14c/thur_april_6",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$u2EcVBA1e0s868drknec0R-Qs43GfgrwtsiIGooQke8"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_14c",
+                                "icon": "https://reddit-subreddit-uploaded-media.s3-accelerate.amazonaws.com/t5_7bf0ce/styles/communityIcon_l7sxewmjqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/14c/thur_april_6",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$kBiSG_KIf4sQgxWdKJkIDXkC_rutYXdnN3fqGWhN7AI",
+                            "origin_server_ts": 1691019131971,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_14c",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/14c/thur_april_6",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$piEVK-QuT2xW-a7j7gYLWEw1guS1eq667EcrIRPEW7A"
+                            }
+                        }
+                    ],
+                    "limited": false,
+                    "prev_batch": "t91_1691019078548"
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": []
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 0
+                }
+            },
+            "!dCFFF-xgTYu4gFNAy1qFrw:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": [
+                        {
+                            "content": {
+                                "displayname": "t2_1qwk",
+                                "membership": "join"
+                            },
+                            "event_id": "$wkecYpI1-N9vwrakQKz31dn5hmnrXB7wZ3Cw_TdqFtY",
+                            "origin_server_ts": 1685608748426,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "@t2_1qwk:reddit.com",
+                            "type": "m.room.member",
+                            "unsigned": {
+                                "com_reddit_subreddit_id": "t5_7bf0ce"
+                            }
+                        }
+                    ]
+                },
+                "timeline": {
+                    "events": [
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_1l1",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": true,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1l1/darya_1",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$lfuRxEV43dC-yF9uRKFHDb-67X47A1sPO4Z0PgDHoD4",
+                            "origin_server_ts": 1691019077500,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "age": 45366296,
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_1l1",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_o00yh2fn0eab1.png",
+                                    "is_restricted": true,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1l1/darya_1",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$sCsTKyp-Vfc2VA6OgKKVE05zJTQWInAxRzn6li_PapU"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_1l1",
+                                "icon": "https://reddit-subreddit-uploaded-media.s3-accelerate.amazonaws.com/t5_7bf0ce/styles/communityIcon_l7sxewmjqqfb1.png",
+                                "is_restricted": true,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1l1/darya_1",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$xHVBLSjXCzRDonDMiK91zmOqZmybuQsP5fRJT_UVl6U",
+                            "origin_server_ts": 1691019131970,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "age": 45311826,
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_1l1",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": true,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1l1/darya_1",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$lfuRxEV43dC-yF9uRKFHDb-67X47A1sPO4Z0PgDHoD4"
+                            }
+                        }
+                    ],
+                    "limited": false,
+                    "prev_batch": "t39_1691019078546"
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": []
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 0
+                }
+            },
+            "!mBGJL4OnQhaAElhY1BVAQA:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": [
+                        {
+                            "content": {
+                                "displayname": "t2_1qwk",
+                                "membership": "join"
+                            },
+                            "event_id": "$xJsw4X6M2bSiggiUCPxYOsBF-ZAb7ZFO2s_UBoAjs0A",
+                            "origin_server_ts": 1681844648044,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "@t2_1qwk:reddit.com",
+                            "type": "m.room.member"
+                        }
+                    ]
+                },
+                "timeline": {
+                    "events": [
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_1br",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1br/test-channel",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$aH_4nISB89sNF6DlB0QM0vrDuikeA5yJK3sxOvTrvEA",
+                            "origin_server_ts": 1691019077502,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_1br",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_o00yh2fn0eab1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1br/test-channel",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$zTzznQpwbUbGrUgrtjLA-rnL8kN9R6XxLj8pVkZNgMo"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_1br",
+                                "icon": "https://reddit-subreddit-uploaded-media.s3-accelerate.amazonaws.com/t5_7bf0ce/styles/communityIcon_l7sxewmjqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1br/test-channel",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$9U9ijbAAtYpqi5iybfqMI6Hs0u2FKrvDPpNrGqgRqVk",
+                            "origin_server_ts": 1691019131971,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_1br",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1br/test-channel",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$aH_4nISB89sNF6DlB0QM0vrDuikeA5yJK3sxOvTrvEA"
+                            }
+                        }
+                    ],
+                    "limited": false,
+                    "prev_batch": "t50_1691019078551"
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": []
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 0
+                }
+            },
+            "!rcdvWD-2QOa8ca2nArkH0A:reddit.com": {
+                "summary": {},
+                "state": {
+                    "events": [
+                        {
+                            "content": {
+                                "displayname": "t2_1qwk",
+                                "membership": "join"
+                            },
+                            "event_id": "$cWK4iwKXL0c8-9vFFGlZnYR_AfnW2lixXih3oUqj9GI",
+                            "origin_server_ts": 1682605756045,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "@t2_1qwk:reddit.com",
+                            "type": "m.room.member"
+                        }
+                    ]
+                },
+                "timeline": {
+                    "events": [
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_1cl",
+                                "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1cl/colin-test-2023-04-27",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$HpgXiIQrpHHV463b3kYoFBVkdMDnKlk6-nTs8sZ-x9k",
+                            "origin_server_ts": 1691019077502,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "age": 45366298,
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_1cl",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_o00yh2fn0eab1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1cl/colin-test-2023-04-27",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$3I4PxcYBNDOly4oDdDVxoBU4SRWW1PpOYh2oK6KiSvM"
+                            }
+                        },
+                        {
+                            "content": {
+                                "canonical": true,
+                                "channel_id": "c2_1cl",
+                                "icon": "https://reddit-subreddit-uploaded-media.s3-accelerate.amazonaws.com/t5_7bf0ce/styles/communityIcon_l7sxewmjqqfb1.png",
+                                "is_restricted": false,
+                                "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1cl/colin-test-2023-04-27",
+                                "subreddit_id": "t5_7bf0ce",
+                                "subreddit_name": "ChatCommunityM0",
+                                "subreddit_nsfw": false,
+                                "subreddit_permission_level": "low",
+                                "subreddit_type": "private",
+                                "via": [
+                                    "reddit.com"
+                                ]
+                            },
+                            "event_id": "$6Xf1uQmZUmfrv7fzH9b6G2ZKl1bpGFSoBKN-QXdPVBc",
+                            "origin_server_ts": 1691019131970,
+                            "sender": "@t2_1qwk:reddit.com",
+                            "state_key": "",
+                            "type": "com.reddit.channel",
+                            "unsigned": {
+                                "age": 45311830,
+                                "prev_content": {
+                                    "canonical": true,
+                                    "channel_id": "c2_1cl",
+                                    "icon": "https://styles.redditmedia.com/t5_7bf0ce/styles/communityIcon_lpd0nptdqqfb1.png",
+                                    "is_restricted": false,
+                                    "permalink": "https://reddit.com/r/ChatCommunityM0/channel/1cl/colin-test-2023-04-27",
+                                    "subreddit_id": "t5_7bf0ce",
+                                    "subreddit_name": "ChatCommunityM0",
+                                    "subreddit_nsfw": false,
+                                    "subreddit_permission_level": "low",
+                                    "subreddit_type": "private",
+                                    "via": [
+                                        "reddit.com"
+                                    ]
+                                },
+                                "prev_sender": "@t2_1qwk:reddit.com",
+                                "replaces_state": "$HpgXiIQrpHHV463b3kYoFBVkdMDnKlk6-nTs8sZ-x9k"
+                            }
+                        }
+                    ],
+                    "limited": false,
+                    "prev_batch": "t93_1691019078545"
+                },
+                "ephemeral": {
+                    "events": []
+                },
+                "account_data": {
+                    "events": []
+                },
+                "unread_notifications": {
+                    "highlight_count": 0,
+                    "notification_count": 0
+                }
+            }
+        },
+        "peek": {},
+        "invite": {},
+        "leave": {}
+    },
+    "to_device": {
+        "events": []
+    },
+    "device_lists": {},
+    "request_debug_info": {
+        "return": {
+            "current_pos_is_after": true,
+            "has_room_ids": false,
+            "immediate": true
+        },
+        "debug_info": {
+            "room_ids_to_sync": {
+                "!-9QuOWjQTBquhc2xEIs20g:reddit.com": "join",
+                "!IYNmStyWSb69MNZcEWldnQ:reddit.com": "join",
+                "!MgXTtG49Q9CKgyw6QGlidQ:reddit.com": "join",
+                "!V4HWvV7ZTXyln1nn6Xu9QQ:reddit.com": "join",
+                "!V_paaRf7SZC3xxs6OpfpQw:reddit.com": "join",
+                "!WPG1qDskRpSIgn3ph-rkCQ:reddit.com": "join",
+                "!ajdGfyDsQ5GJFXYN5YhRPg:reddit.com": "join",
+                "!dCFFF-xgTYu4gFNAy1qFrw:reddit.com": "join",
+                "!mBGJL4OnQhaAElhY1BVAQA:reddit.com": "join",
+                "!rcdvWD-2QOa8ca2nArkH0A:reddit.com": "join"
+            }
+        }
+    }
+}
+}

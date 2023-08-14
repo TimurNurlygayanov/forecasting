@@ -1,0 +1,6 @@
+python-telegram-bot
+pandas_datareader
+tqdm
+polygon
+pandas_ta
+pandas
