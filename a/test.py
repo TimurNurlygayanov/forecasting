@@ -21,7 +21,7 @@ TICKERS = get_tickets()
 new_matrix = []
 results = []
 
-for ticker in TICKERS[:100]:
+for ticker in TICKERS[:200]:
     df = get_data(ticker)
 
     if df is None:
@@ -31,7 +31,7 @@ for ticker in TICKERS[:100]:
     df = df[200:]
 
     for i, (index, row) in enumerate(df.iterrows()):
-        state = [0] * 76
+        state = [0] * 82
         result = 0
 
         if len(df) - 40 > i > 200:
@@ -95,6 +95,14 @@ for ticker in TICKERS[:100]:
             candle_body = abs(row['High'] - row['Low'])
             green_hammer = row['Close'] > row['Open'] and (row['Open'] - row['Low']) / candle_full > 0.7
             state[75] = 1 if candle_full > candle_body * 3 and green_hammer else 0
+
+            state[76] = 1 if df['volume'].values[i] > df['volume'].values[i - 1] else 0
+            state[77] = 1 if df['volume'].values[i - 1] > df['volume'].values[i - 2] else 0
+            state[78] = 1 if df['volume'].values[i - 2] > df['volume'].values[i - 3] else 0
+
+            state[79] = 1 if df['vwap'].values[i] > df['vwap'].values[i - 1] else 0
+            state[80] = 1 if df['vwap'].values[i - 1] > df['vwap'].values[i - 2] else 0
+            state[81] = 1 if df['vwap'].values[i - 2] > df['vwap'].values[i - 3] else 0
 
             max_profit = abs(max(df['High'].values[i+1:i+10]) - row['Close']) / row['Close']
             max_lose = abs(min(df['Low'].values[i+1:i+10]) - row['Close']) / row['Close']
