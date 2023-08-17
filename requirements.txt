@@ -13,3 +13,8 @@ ta
 finvizfinance
 
 vectorbt
+
+polygon-api-client
+scikit-learn
+catboost
+TA-Lib

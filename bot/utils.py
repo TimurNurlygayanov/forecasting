@@ -19,6 +19,19 @@ with open('/Users/timur.nurlygaianov/api_key.txt', encoding='utf-8', mode='r') a
 client = RESTClient(api_key=api_key)
 
 
+def get_tickers2(limit=100):
+    result = []
+
+    for x in client.list_tickers(market='stocks', exchange='XNYS', active=True):
+        if '.' not in x.ticker and x.ticker == x.ticker.upper():
+            result.append(x.ticker)
+
+        if len(result) >= limit:
+            return result
+
+    return result
+
+
 def get_data(ticker='AAPL', forex=False):
     df = None
     indexes = []
@@ -41,12 +54,20 @@ def get_data(ticker='AAPL', forex=False):
 
         df = pd.DataFrame(data, index=indexes)
 
+        df.ta.cdl_pattern(append=True, name=["doji", "morningstar", "hammer", "engulfing", "shootingstar"])
+
+        df.ta.ema(length=7, append=True, col_names=('EMA7',))
         df.ta.ema(length=50, append=True, col_names=('EMA50',))
         df.ta.ema(length=200, append=True, col_names=('EMA200',))
         df.ta.supertrend(append=True, length=10, multiplier=3.0,
                          col_names=('S_trend', 'S_trend_d', 'S_trend_l', 'S_trend_s',))
+        df.ta.supertrend(append=True, length=34, multiplier=4.0,
+                         col_names=('S_trend34', 'S_trend_d34', 'S_trend_l34', 'S_trend_s34',))
         df.ta.rsi(length=14, append=True, col_names=('RSI',))
         df.ta.macd(append=True, col_names=('MACD', 'MACD_hist', 'MACD_signal'))
+        df.ta.bbands(col_names=('L', 'M', 'U', 'B', 'P'), append=True)
+
+        df.ta.atr(append=True, col_names=('ATR',))
     except Exception as e:
         print(f'No data for {ticker} {e}')
 
@@ -81,7 +102,7 @@ def check_strategy(df, rsi_threshold=50):
     return good_deals / (good_deals + bad_deals), sum(deal_length) / len(deal_length)
 
 
-def get_tickets():
+def get_tickers():
     with open('smp500.txt', 'r') as f:
         TICKERS = f.readlines()
 

@@ -1,5 +1,5 @@
 from bot.utils import get_data
-from bot.utils import get_tickets
+from bot.utils import get_tickers
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
@@ -17,7 +17,7 @@ def is_engulfing_bullish(open1, open2, close1, close2):
     return 0
 
 
-TICKERS = get_tickets()
+TICKERS = get_tickers()
 new_matrix = []
 results = []
 
@@ -31,7 +31,7 @@ for ticker in TICKERS[:200]:
     df = df[200:]
 
     for i, (index, row) in enumerate(df.iterrows()):
-        state = [0] * 82
+        state = [0] * 98
         result = 0
 
         if len(df) - 40 > i > 200:
@@ -104,17 +104,46 @@ for ticker in TICKERS[:200]:
             state[80] = 1 if df['vwap'].values[i - 1] > df['vwap'].values[i - 2] else 0
             state[81] = 1 if df['vwap'].values[i - 2] > df['vwap'].values[i - 3] else 0
 
+            state[82] = 1 if row['High'] > row['U'] else 0
+            state[83] = 1 if row['Close'] > row['U'] else 0
+
+            state[84] = 1 if row['Low'] < row['L'] else 0
+            state[85] = 1 if row['Close'] < row['L'] else 0
+
+            state[86] = 1 if df['EMA7'].values[i] > df['EMA7'].values[i - 1] else 0
+            state[87] = 1 if df['Close'].values[i] > df['EMA7'].values[i] else 0
+
+            state[88] = 1 if row['S_trend_d34'] > 0 else 0
+            state[89] = 1 if row['S_trend_d34'] > 0 > df['S_trend_d34'].values[i - 1] else 0
+
+            state[90] = 1 if row['CDL_DOJI_10_0.1'] > 0 else 0
+            state[91] = 1 if row['CDL_MORNINGSTAR'] > 0 else 0
+            state[92] = 1 if row['CDL_HAMMER'] > 0 else 0
+            state[93] = 1 if row['CDL_SHOOTINGSTAR'] > 0 else 0
+            state[94] = 1 if row['CDL_ENGULFING'] > 0 else 0
+            state[95] = 1 if row['CDL_ENGULFING'] < 0 else 0
+
+            if df['EMA50'].values[i] > df['EMA200'].values[i]:
+                if df['EMA50'].values[i-1] < df['EMA200'].values[i-1]:
+                    state[96] = 1
+
+            if df['EMA7'].values[i] > df['EMA50'].values[i]:
+                if df['EMA7'].values[i - 1] < df['EMA50'].values[i - 1]:
+                    state[97] = 1
+
             max_profit = abs(max(df['High'].values[i+1:i+10]) - row['Close']) / row['Close']
-            max_lose = abs(min(df['Low'].values[i+1:i+10]) - row['Close']) / row['Close']
+            max_lose = min(df['Low'].values[i+1:i+10]) - row['Close'] / row['Close']
             average_profit = (sum(df['Low'].values[i+1:i+10]) / 10 - row['Close']) / row['Close']
 
-            if average_profit != 0:
-                if max_lose == 0:
-                    result = 1
-                if max_lose > 0 and max_profit / max_lose > 2:
-                    result = 1
+            # high precision, but small amount of predictions
+            # if 0.05 > max_lose > 0 and max_profit / max_lose > 2 and max_profit > 0.1:
+            # if max_lose == 0:
+            #     max_lose = -0.0001
 
-                    # print(f'profit {100*max_profit:.2f}, lost: {100*max_lose:.2f}')
+            if max_lose > -0.02 and max_profit > 0.06:  # max_profit / abs(max_lose) > 2 and
+                result = 1
+
+                # print(f'profit {100*max_profit:.2f}, lost: {100*max_lose:.2f}')
 
             new_matrix.append(state)
             results.append(result)
@@ -130,7 +159,7 @@ def evaluate_model(X_test, y_test):
         f1 = f1_score(y_test, y_pred)
         roc_auc = roc_auc_score(y_test, y_pred)
 
-        print('Total deals predicted ', sum(y_pred))
+        print('Total deals predicted ', sum(y_pred), 100*sum(y_pred)/len(y_pred))
 
         # print the evaluation metrics
         print(f'Accuracy: {accuracy:.3f}')
@@ -146,9 +175,10 @@ def evaluate_model(X_test, y_test):
         pass
 
 
-model = CatBoostClassifier(iterations=10000, depth=6, thread_count=7, learning_rate=0.01, loss_function='Logloss')
+model = CatBoostClassifier(iterations=10000, depth=10, thread_count=7, learning_rate=0.001, loss_function='Logloss')
 X_train, X_test, y_train, y_test = train_test_split(new_matrix, results, test_size=0.2, random_state=42)
 
-model.fit(X_train, y_train, eval_set=(X_test, y_test), verbose=False)
+sample_weights = [1 if y == 1 else 0.9 for y in y_train]
+model.fit(X_train, y_train, eval_set=(X_test, y_test), verbose=False, sample_weight=sample_weights)
 
 evaluate_model(X_test, y_test)
