@@ -1,4 +1,5 @@
 
+import os
 import random
 
 from polygon import RESTClient
@@ -6,10 +7,11 @@ from datetime import datetime
 from datetime import timedelta
 import pandas as pd
 import pandas_ta  # for TA magic
+from tqdm import tqdm
 
 
 now = datetime.now()
-START = now - timedelta(days=1000)
+START = now - timedelta(days=2000)
 END = now + timedelta(days=1)
 
 with open('/Users/timur.nurlygaianov/api_key.txt', encoding='utf-8', mode='r') as f:
@@ -19,40 +21,79 @@ with open('/Users/timur.nurlygaianov/api_key.txt', encoding='utf-8', mode='r') a
 client = RESTClient(api_key=api_key)
 
 
-def get_tickers2(limit=100):
-    result = []
-
-    for x in client.list_tickers(market='stocks', exchange='XNYS', active=True):
-        if '.' not in x.ticker and x.ticker == x.ticker.upper():
-            result.append(x.ticker)
-
-        if len(result) >= limit:
-            return result
-
+def get_ticker_details(ticker='AAPL'):
+    result = client.get_ticker_details(ticker=ticker)
+    # print(result)
     return result
 
 
-def get_data(ticker='AAPL', forex=False):
+def get_tickers_polygon(limit=1000):
+    result = set()
+
+    file_name = f'cached_tickers_{limit}.txt'
+    if os.path.isfile(file_name):
+        with open(file_name, 'r') as f:
+            result = set(f.readlines())
+            result = set([r.strip() for r in result])
+            return list(result)[:limit]
+
+    # print('Collecting list of exchanges...')
+    # exchanges = pd.DataFrame(client.get_exchanges(asset_class='stocks', locale='us'))
+    # exchanges = set(exchanges.mic)
+    # exchanges.remove(None)
+    # print(f'Identified {len(exchanges)} exchanges.')
+
+    print('Collecting list of tickers...')
+
+    for e in ['XNAS', 'XNYS']:   # NASDAQ and NYSE only
+        for x in client.list_tickers(market='stocks', exchange=e, active=True, limit=1000, type='CS'):
+            if '.' not in x.ticker and x.ticker == x.ticker.upper():
+                ticker_data = client.get_ticker_details(ticker=x.ticker)
+
+                if ticker_data.list_date and ticker_data.list_date < '2021-01-01':   # IPO date is more than 2 years ago
+                    # if ticker_data.market_cap and ticker_data.market_cap > 300 * (10 ** 2):   # Market Cap > 300M
+                    #     if ticker_data.weighted_shares_outstanding and ticker_data.weighted_shares_outstanding
+                    #     > 10 ** 6:   # Shares outstanding over 1M
+
+                    if len(result) >= limit:
+                        break
+                    else:
+                        result.add(x.ticker)
+
+    print(f'Collected {len(result)} tickers.')
+
+    with open(file_name, 'w+') as f:
+        f.writelines('\n'.join(result))
+
+    return list(result)[:limit]
+
+
+def get_data(ticker='AAPL', forex=False, period='day'):
     df = None
     indexes = []
     data = {'Close': [], 'Open': [], 'Low': [], 'High': [], 'vwap': [], 'volume': []}
 
     try:
-        for a in client.list_aggs(ticker=ticker, multiplier=1, timespan="day",  # "hour"
-                                  from_=START.strftime("%Y-%m-%d"),
-                                  to=END.strftime("%Y-%m-%d"),
-                                  limit=50000):
-            date = datetime.fromtimestamp(a.timestamp // 1000).strftime("%Y-%m-%d %H:%M:%S")
+        file_name = f'rl/data/{ticker}_daily_{datetime.now().strftime("%Y-%m-%d")}.xlsx'
+        if os.path.isfile(file_name):
+            df = pd.read_excel(file_name, index_col=0)
+        else:
+            for a in client.list_aggs(ticker=ticker, multiplier=1, timespan=period,  # "hour"
+                                      from_=START.strftime("%Y-%m-%d"),
+                                      to=END.strftime("%Y-%m-%d"),
+                                      limit=50000):
+                date = datetime.fromtimestamp(a.timestamp // 1000).strftime("%Y-%m-%d %H:%M:%S")
 
-            indexes.append(date)
-            data['Close'].append(a.close)
-            data['Open'].append(a.open)
-            data['High'].append(a.high)
-            data['Low'].append(a.low)
-            data['vwap'].append(a.vwap)
-            data['volume'].append(a.volume)
+                indexes.append(date)
+                data['Close'].append(a.close)
+                data['Open'].append(a.open)
+                data['High'].append(a.high)
+                data['Low'].append(a.low)
+                data['vwap'].append(a.vwap)
+                data['volume'].append(a.volume)
 
-        df = pd.DataFrame(data, index=indexes)
+            df = pd.DataFrame(data, index=indexes)
+            df.to_excel(file_name, index=True, header=True)
 
         df.ta.cdl_pattern(append=True, name=["doji", "morningstar", "hammer", "engulfing", "shootingstar"])
 
@@ -136,3 +177,115 @@ def get_tickers():
     random.shuffle(TICKERS)
 
     return TICKERS
+
+
+def is_engulfing_bullish(open1, open2, close1, close2):
+    if open1 > close1:   # previous candle is red
+        if open2 < close2:  # current candle is green
+            if open2 < close1 and close2 > open1:  # green is bigger
+                return 1
+
+    return 0
+
+
+def get_state(df, i: int = 0):
+    state = [0] * 57
+    row = df.iloc[i]
+
+    for j in range(10):  # 50
+        close_x = df['Close'].values[i - j]
+        open_x = df['Open'].values[i - j]
+
+        if close_x > open_x:
+            state[j] = 1  # is this a green candle?
+
+    if sum(state[7:10]) == 3:
+        state[10] = 1  # last 3 candles are green?
+
+    state[11] = is_engulfing_bullish(
+        df['Open'].values[i - 1], df['Open'].values[i],
+        df['Close'].values[i - 1], df['Close'].values[i]
+    )
+
+    state[12] = 1 if row['RSI'] < 30 else 0
+    state[13] = 1 if row['RSI'] < 40 else 0
+    state[14] = 1 if row['RSI'] > 70 else 0
+    state[15] = 1 if row['S_trend_d'] > 0 else 0
+    state[16] = 1 if row['S_trend_d'] > 0 > df['S_trend_d'].values[i - 1] else 0
+
+    state[17] = 1 if row['Low'] > row['EMA200'] else 0
+    state[18] = 1 if row['Low'] > row['EMA50'] else 0
+    state[19] = 1 if row['EMA50'] > row['EMA200'] else 0
+
+    state[20] = 1 if row['Close'] > row['EMA200'] else 0
+    state[21] = 1 if row['Close'] > row['EMA50'] else 0
+
+    # lower low and higher high
+    state[22] = 1 if row['Low'] < min(df['Low'].values[i - 10:i - 1]) else 0
+    state[23] = 1 if row['Low'] < min(df['Low'].values[i - 50:i - 1]) else 0
+    state[24] = 1 if row['Low'] < min(df['Low'].values[i - 200:i - 1]) else 0
+
+    state[25] = 1 if row['High'] > max(df['High'].values[i - 10:i - 1]) else 0
+    state[26] = 1 if row['High'] > max(df['High'].values[i - 50:i - 1]) else 0
+    state[27] = 1 if row['High'] > max(df['High'].values[i - 200:i - 1]) else 0
+
+    # if price higher that EMA for long time?
+    higher_price = True
+    for j in range(10):
+        if df['Close'].values[i - j] < df['EMA50'].values[i - j]:
+            higher_price = False
+    state[28] = 1 if higher_price else 0
+
+    higher_price = True
+    for j in range(10):
+        if df['Close'].values[i - j] < df['EMA200'].values[i - j]:
+            higher_price = False
+    state[29] = 1 if higher_price else 0
+
+    state[30] = 1 if df['EMA200'].values[i] > df['EMA200'].values[i - 10] else 0
+    state[31] = 1 if df['EMA50'].values[i] > df['EMA50'].values[i - 10] else 0
+
+    state[32] = 1 if row['MACD_hist'] > df['MACD_hist'].values[i - 1] > df['MACD_hist'].values[i - 2] else 0
+    state[33] = 1 if row['MACD_hist'] > 0 else 0
+
+    candle_full = abs(row['High'] - row['Low'])
+    candle_body = abs(row['High'] - row['Low'])
+    green_hammer = row['Close'] > row['Open'] and (row['Open'] - row['Low']) / candle_full > 0.7
+    state[34] = 1 if candle_full > candle_body * 3 and green_hammer else 0
+
+    state[35] = 1 if df['volume'].values[i] > df['volume'].values[i - 1] else 0
+    state[36] = 1 if df['volume'].values[i - 1] > df['volume'].values[i - 2] else 0
+    state[37] = 1 if df['volume'].values[i - 2] > df['volume'].values[i - 3] else 0
+
+    state[38] = 1 if df['vwap'].values[i] > df['vwap'].values[i - 1] else 0
+    state[39] = 1 if df['vwap'].values[i - 1] > df['vwap'].values[i - 2] else 0
+    state[40] = 1 if df['vwap'].values[i - 2] > df['vwap'].values[i - 3] else 0
+
+    state[41] = 1 if row['High'] > row['U'] else 0
+    state[42] = 1 if row['Close'] > row['U'] else 0
+
+    state[43] = 1 if row['Low'] < row['L'] else 0
+    state[44] = 1 if row['Close'] < row['L'] else 0
+
+    state[45] = 1 if df['EMA7'].values[i] > df['EMA7'].values[i - 1] else 0
+    state[46] = 1 if df['Close'].values[i] > df['EMA7'].values[i] else 0
+
+    state[47] = 1 if row['S_trend_d34'] > 0 else 0
+    state[48] = 1 if row['S_trend_d34'] > 0 > df['S_trend_d34'].values[i - 1] else 0
+
+    state[49] = 1 if row['CDL_DOJI_10_0.1'] > 0 else 0
+    state[50] = 1 if row['CDL_MORNINGSTAR'] > 0 else 0
+    state[51] = 1 if row['CDL_HAMMER'] > 0 else 0
+    state[52] = 1 if row['CDL_SHOOTINGSTAR'] > 0 else 0
+    state[53] = 1 if row['CDL_ENGULFING'] > 0 else 0
+    state[54] = 1 if row['CDL_ENGULFING'] < 0 else 0
+
+    if df['EMA50'].values[i] > df['EMA200'].values[i]:
+        if df['EMA50'].values[i - 1] < df['EMA200'].values[i - 1]:
+            state[55] = 1
+
+    if df['EMA7'].values[i] > df['EMA50'].values[i]:
+        if df['EMA7'].values[i - 1] < df['EMA50'].values[i - 1]:
+            state[56] = 1
+
+    return state
