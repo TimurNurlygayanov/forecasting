@@ -8,12 +8,13 @@
 from bot.utils import get_data
 from bot.utils import get_tickers_polygon
 from bot.utils import get_state
-from bot.utils import get_ticker_details
+from bot.utils import get_features_importance
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
 from catboost import CatBoostClassifier
+from sklearn.linear_model import LogisticRegression
 
 from tqdm import tqdm
 
@@ -22,8 +23,9 @@ TICKERS = get_tickers_polygon(limit=5000)  # 2000
 new_matrix = []
 latest_state = {}
 results = []
-step_size = 5  # make sure we do not use similar data for training and verification
+step_size = 10  # make sure we do not use similar data for training and verification
 
+# TICKERS = TICKERS[:200]
 for ticker in tqdm(TICKERS):
     df = get_data(ticker)
 
@@ -40,14 +42,14 @@ for ticker in tqdm(TICKERS):
         result = 0
 
         if len(df) - 40 > i > 200:
-            state = get_state(df, i)
+            state = get_state(df, i, step_size=step_size)
 
             max_profit = (max(df['High'].values[i+1:i+step_size]) - row['Close']) / row['Close']
             max_lose = (min(df['Low'].values[i+1:i+step_size]) - row['Close']) / row['Close']
 
             # 2&6% gives more deals, 2&10 gives too small
             # if max_lose > -0.02 and max_profit > 0.08:
-            if max_lose > -0.02 and max_profit > 0.08:
+            if max_lose > -0.02 and max_profit > 0.06:
                 result = 1
 
             new_matrix.append(state)
@@ -67,7 +69,8 @@ def evaluate_model(X_test, y_test):
         roc_auc = roc_auc_score(y_test, y_pred)
 
         # Share total deals predicted and how much triggers algo will give every day
-        print('Total deals predicted ', sum(y_pred), len(TICKERS) * sum(y_pred)/len(y_pred))
+        print(f'Total deals predicted {sum(y_pred)}, '
+              f'this is about {len(TICKERS) * sum(y_pred)/len(y_pred):.2f} deals / day')
 
         # print the evaluation metrics
         print(f'Accuracy: {accuracy:.3f}')
@@ -84,14 +87,16 @@ def evaluate_model(X_test, y_test):
 
 
 # model = CatBoostClassifier(iterations=10000, depth=10, thread_count=7, learning_rate=0.001, loss_function='Logloss')
-model = CatBoostClassifier(iterations=10000, depth=10, thread_count=7, learning_rate=0.001, loss_function='Logloss')
+# model = CatBoostClassifier(iterations=10000, depth=10, thread_count=7, learning_rate=0.001, loss_function='Logloss')
+model = LogisticRegression(max_iter=10000)
 X_train, X_test, y_train, y_test = train_test_split(new_matrix, results, test_size=0.2, random_state=42)
 
-# sample_weights = [1 if y == 1 else 0.9 for y in y_train]
-model.fit(X_train, y_train, eval_set=(X_test, y_test), verbose=False)  # sample_weight=sample_weights
+print(f'Positive options in evaluation dataset: {sum(y_train)} / {len(X_train)}')
+model.fit(X_train, y_train)
 
 evaluate_model(X_test, y_test)
 
+"""
 print('* ' * 30)
 for ticker, state in latest_state.items():
     res = model.predict(state)
@@ -99,3 +104,7 @@ for ticker, state in latest_state.items():
 
     if res == 1:
         print(ticker, res, prediction_proba)
+"""
+
+
+# get_features_importance(model)

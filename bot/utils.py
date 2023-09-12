@@ -2,6 +2,8 @@
 import os
 import random
 
+import requests
+
 from polygon import RESTClient
 from datetime import datetime
 from datetime import timedelta
@@ -68,7 +70,36 @@ def get_tickers_polygon(limit=1000):
     return list(result)[:limit]
 
 
-def get_data(ticker='AAPL', forex=False, period='day'):
+def get_news(ticker):
+    url = (f'https://api.polygon.io/v2/reference/news?ticker={ticker}&'
+           f'order=desc&limit=1000&sort=published_utc&apiKey={api_key}')
+
+    results = []
+    while url:
+        res = requests.get(url).json()
+
+        for n in res['results']:
+            date = datetime.strptime(n['published_utc'].split('T')[0], "%Y-%m-%d")
+
+            results.append({
+                'date': date,
+                'keywords': n.get('keywords'),
+                'tickers': n.get('tickers'),
+                'title': n['title']
+            })
+
+            if date < START:
+                return results
+
+        url = res.get('next_url')
+
+        if url:
+            url += f'&apiKey={api_key}'
+
+    return results
+
+
+def get_data(ticker='AAPL', period='day'):
     df = None
     indexes = []
     data = {'Close': [], 'Open': [], 'Low': [], 'High': [], 'vwap': [], 'volume': []}
@@ -82,7 +113,7 @@ def get_data(ticker='AAPL', forex=False, period='day'):
                                       from_=START.strftime("%Y-%m-%d"),
                                       to=END.strftime("%Y-%m-%d"),
                                       limit=50000):
-                date = datetime.fromtimestamp(a.timestamp // 1000).strftime("%Y-%m-%d %H:%M:%S")
+                date = datetime.fromtimestamp(a.timestamp // 1000).strftime("%Y-%m-%d")
 
                 indexes.append(date)
                 data['Close'].append(a.close)
@@ -188,19 +219,46 @@ def is_engulfing_bullish(open1, open2, close1, close2):
     return 0
 
 
-def get_state(df, i: int = 0):
-    state = [0] * 57
+def get_state(df, i: int = 0, step_size: int = 10):
+    state = [0] * 64
     row = df.iloc[i]
 
-    for j in range(10):  # 50
-        close_x = df['Close'].values[i - j]
-        open_x = df['Open'].values[i - j]
+    #
+    state[0] = 1 if row['Low'] > row['EMA200'] and df['Low'].values[i - 1] < df['EMA200'].values[i - 1] else 0
+    state[1] = 1 if row['Low'] > row['EMA50'] and df['Low'].values[i - 1] < df['EMA50'].values[i - 1] else 0
+    state[2] = 1 if row['EMA50'] > row['EMA200'] and df['EMA50'].values[i - 1] < df['EMA200'].values[i - 1] else 0
+    state[3] = 1 if row['EMA7'] > row['EMA50'] and df['EMA7'].values[i - 1] < df['EMA50'].values[i - 1] else 0
+    state[4] = 1 if row['RSI'] > 30 > df['RSI'].values[i - 1] else 0
+    state[5] = 1 if row['RSI'] > 35 > df['RSI'].values[i - 1] else 0
+    state[6] = 1 if row['RSI'] > 50 > df['RSI'].values[i - 1] else 0
+    state[7] = 1 if row['S_trend_d'] > 0 and row['RSI'] < 50 else 0
 
-        if close_x > open_x:
-            state[j] = 1  # is this a green candle?
+    # x custom signals:
+    macd_signal = False
+    if 0 > row['MACD'] > row['MACD_signal']:
+        state[8] = 1
 
-    if sum(state[7:10]) == 3:
-        state[10] = 1  # last 3 candles are green?
+        for j in range(1, 6):
+            if df['MACD'].values[i - j] < df['MACD_signal'].values[i - j]:
+                macd_signal = True
+
+    if macd_signal and row['S_trend_d'] > 0:
+        state[9] = 1 if row['S_trend_d'] > 0 and row['RSI'] < 50 else 0
+
+    #
+
+    is_green = True
+
+    if df['Open'].values[i] < df['Close'].values[i]:
+        is_green = False
+
+    if df['Open'].values[i - 1] < df['Close'].values[i - 1]:
+        is_green = False
+
+    if df['Open'].values[i - 2] < df['Close'].values[i - 2]:
+        is_green = False
+
+    state[10] = 1 if is_green else 0  # last 3 candles are green?
 
     state[11] = is_engulfing_bullish(
         df['Open'].values[i - 1], df['Open'].values[i],
@@ -229,13 +287,14 @@ def get_state(df, i: int = 0):
     state[26] = 1 if row['High'] > max(df['High'].values[i - 50:i - 1]) else 0
     state[27] = 1 if row['High'] > max(df['High'].values[i - 200:i - 1]) else 0
 
-    # if price higher that EMA for long time?
+    # if price higher that EMA for long time? - EMA 50
     higher_price = True
     for j in range(10):
         if df['Close'].values[i - j] < df['EMA50'].values[i - j]:
             higher_price = False
     state[28] = 1 if higher_price else 0
 
+    # EMA 200
     higher_price = True
     for j in range(10):
         if df['Close'].values[i - j] < df['EMA200'].values[i - j]:
@@ -288,4 +347,33 @@ def get_state(df, i: int = 0):
         if df['EMA7'].values[i - 1] < df['EMA50'].values[i - 1]:
             state[56] = 1
 
+    delta = row['ATR'] / row['Close']
+
+    state[57] = 1 if delta > 0.01 else 0
+    state[58] = 1 if delta > 0.02 else 0
+    state[59] = 1 if delta > 0.5 else 0
+
+    state[60] = 1 if row['News'] else 0
+    state[61] = 1 if sum(df['News'].values[i - 5:i]) > 0 else 0
+    state[62] = 1 if sum(df['News'].values[i - 5:i]) > 2 else 0
+    state[63] = 1 if sum(df['News'].values[i - 10:i]) > 0 else 0
+
     return state
+
+
+def get_features_importance(model):
+    # Get feature importances
+    feature_importance = model.get_feature_importance()
+
+    # Get feature names
+    feature_names = model.feature_names_
+
+    # Create a dictionary to associate feature names with importances
+    feature_importance_dict = dict(zip(feature_names, feature_importance))
+
+    # Sort features by importance
+    sorted_feature_importance = sorted(feature_importance_dict.items(), key=lambda x: x[1], reverse=True)
+
+    # Print sorted feature importances
+    for feature, importance in sorted_feature_importance[:10]:
+        print(f"{feature}: {importance:.4f}")
