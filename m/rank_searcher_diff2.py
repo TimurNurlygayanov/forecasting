@@ -3,38 +3,254 @@ import numpy as np
 import pandas as pd
 import pandas_ta  # for TA magic
 
+from tqdm import tqdm
+
+from bot.utils import get_data
+from bot.utils import get_tickers_polygon
+
+
 RANK = {}
+TICKERS = get_tickers_polygon(limit=5000)
+SIGNALS = []
+DATA_TO_CHECK = {}
+CHECK_PERIOD = 20
+MAX_STOP_LOSS = 0.9
+RISK_REWARD_RATE = 2
 
-def run_backtest(ticker='AAPL', period='700d'):
 
-    df = pd.DataFrame()
-    df = df.ta.ticker(ticker, period=period, interval='1d')
-
+def check_strategy_super_trend(df):
     intervals = []
     trends = []
-
-    df.ta.atr(append=True, col_names=('ATR',))
 
     for i in [9, 21, 34, 50, 100, 150, 200]:
         df.ta.wma(length=i, append=True, col_names=(f'WMA{i}',))
         intervals.append(i)
 
     for i in [10, 12, 21, 34]:
-        for j in [2, 3, 4, 6]:
+        for j in [1.5, 2, 2.5, 3, 4]:
             df.ta.supertrend(append=True, length=i, multiplier=j,
                              col_names=(f'S_trend_{i}_{j}', f'S_trend_d_{i}_{j}', f'S_trend_l_{i}_{j}', f'S_trend_s_{i}_{j}',))
             trends.append(f'S_trend_d_{i}_{j}')
 
     df = df[200:].copy()
+    last_index = df.shape[0] - 1
+
+    if last_index < 100:
+        return None
 
     purchase_price = 0
     stop_loss_price = 0
     take_profit_price = 0
-    max_total_profit = [1000, 0, 0, 0, 0, 1000]
+    max_total_profit = [1000, 0, 0, 0, 0, 1000, "", 2, 0]
 
     for i1 in intervals:
         for t2 in trends:
-            ema1 = f'WMA{i1}'
+            for stop_loss_factor in [0.1, 0.3, 0.5, 1, 1.1, 1.5, 2, 2.5, 3]:
+                ema1 = f'WMA{i1}'
+
+                # Check if we got any signals for the last 3 days
+                signal = False
+                if df['Close'].values[last_index] > df[ema1].values[last_index]:
+                    if df[t2].values[last_index - 1] < 0 < df[t2].values[last_index]:
+                        signal = True
+
+                        stop_loss_price_now = df['Close'].values[last_index] - stop_loss_factor * df['ATR'].values[
+                            last_index]
+                        take_profit_price_now = df['Close'].values[last_index] + 3 * stop_loss_factor * \
+                                                df['ATR'].values[last_index]
+
+                if not signal:
+                    # no signal for now, no need to check the
+                    # effectiveness of the strategy on history data
+                    continue
+
+                total_profit = 1000
+                number_of_deals = 0
+                good_deals = 0
+                purchase_index = 0
+                average_period = 0
+
+                for i, (index, row) in enumerate(df.iterrows()):
+                    stop_loss_percent = (row['Close'] - stop_loss_factor * row['ATR']) / row['Close']
+
+                    if purchase_price == 0:
+                        if row['Close'] > row[ema1] and df[t2].values[i-1] < 0 < row[t2]:
+                            if stop_loss_percent > MAX_STOP_LOSS:
+                                purchase_price = row['Close']
+                                stop_loss_price = purchase_price - stop_loss_factor * row['ATR']
+                                take_profit_price = purchase_price + 3 * stop_loss_factor * row['ATR']
+
+                                purchase_index = i
+                    else:
+                        if row['Low'] < stop_loss_price:
+                            total_profit = (stop_loss_price/purchase_price) * total_profit
+                            purchase_price = 0
+                            number_of_deals += 1
+
+                            average_period += i - purchase_index
+
+                        elif row['High'] > take_profit_price:
+                            total_profit = (take_profit_price/purchase_price) * total_profit
+                            purchase_price = 0
+                            number_of_deals += 1
+                            good_deals += 1
+
+                            average_period += i - purchase_index
+
+                average_period = int(average_period / number_of_deals) if number_of_deals > 0 else 1
+                if max_total_profit[0] < total_profit and good_deals / number_of_deals > 0.45:
+                    max_total_profit[0] = total_profit
+                    max_total_profit[1] = ema1
+                    max_total_profit[2] = t2
+                    max_total_profit[3] = number_of_deals
+                    max_total_profit[4] = good_deals
+                    max_total_profit[5] = average_period
+                    max_total_profit[6] = "Close higher than WMA and Super Trend started"
+                    max_total_profit[7] = stop_loss_factor
+                    max_total_profit[8] = (stop_loss_price_now, take_profit_price_now)
+
+    if max_total_profit[0] > 1000:
+        SIGNALS.append((ticker, max_total_profit))
+
+
+def check_strategy_wma_crossover(df):
+    intervals = []
+
+    for i in range(3, 150, 3):
+        df.ta.wma(length=i, append=True, col_names=(f'WMA{i}',))
+        intervals.append(i)
+
+    df = df[200:].copy()
+    last_index = df.shape[0] - 1
+
+    if last_index < 100:
+        return None
+
+    if df['Close'].values[last_index] < df['EMA50_X'].values[last_index]:
+        return None
+
+    purchase_price = 0
+    stop_loss_price = 0
+    take_profit_price = 0
+    max_total_profit = [1000, 0, 0, 0, 0, 1000, "", 2, 0]
+
+    for i1 in intervals:
+        for i2 in intervals:
+            if i1 >= i2:
+                continue
+
+            for stop_loss_factor in [0.1, 0.3, 0.5, 1, 1.1, 1.5, 2, 2.5, 3]:
+                wma1 = f'WMA{i1}'
+                wma2 = f'WMA{i2}'
+
+                if wma1 == wma2:
+                    continue
+
+                # Check if we got any signals for the last 3 days
+                signal = False
+                if df[wma1].values[last_index] > df[wma2].values[last_index]:
+                    if df[wma1].values[last_index - 1] < df[wma2].values[last_index - 1]:
+                        signal = True
+
+                        stop_loss_price_now = df['Close'].values[last_index] - stop_loss_factor * df['ATR'].values[
+                            last_index]
+                        take_profit_price_now = df['Close'].values[last_index] + RISK_REWARD_RATE * stop_loss_factor * \
+                                                df['ATR'].values[last_index]
+
+                if not signal:
+                    # no signal for now, no need to check the
+                    # effectiveness of the strategy on history data
+                    continue
+
+                total_profit = 1000
+                number_of_deals = 0
+                good_deals = 0
+                purchase_index = 0
+                average_period = 0
+
+                for i, (index, row) in enumerate(df.iterrows()):
+                    stop_loss_percent = (row['Close'] - stop_loss_factor * row['ATR']) / row['Close']
+
+                    if purchase_price == 0:
+                        if row[wma1] > row[wma2] and df[wma1].values[i-1] < df[wma2].values[i-1]:
+                            if stop_loss_percent > MAX_STOP_LOSS:
+                                purchase_price = row['Close']
+                                stop_loss_price = purchase_price - stop_loss_factor * row['ATR']
+                                take_profit_price = purchase_price + RISK_REWARD_RATE * stop_loss_factor * row['ATR']
+
+                                purchase_index = i
+                    else:
+                        if row['Low'] < stop_loss_price:
+                            total_profit = (stop_loss_price/purchase_price) * total_profit
+                            purchase_price = 0
+                            number_of_deals += 1
+
+                            average_period += i - purchase_index
+
+                        elif row['High'] > take_profit_price:
+                            total_profit = (take_profit_price/purchase_price) * total_profit
+                            purchase_price = 0
+                            number_of_deals += 1
+                            good_deals += 1
+
+                            average_period += i - purchase_index
+
+                average_period = int(average_period / number_of_deals) if number_of_deals > 0 else 1
+                if max_total_profit[0] < total_profit and good_deals / number_of_deals > 0.45:
+                    max_total_profit[0] = total_profit
+                    max_total_profit[1] = wma1
+                    max_total_profit[2] = wma2
+                    max_total_profit[3] = number_of_deals
+                    max_total_profit[4] = good_deals
+                    max_total_profit[5] = average_period
+                    max_total_profit[6] = "WMA crossover"
+                    max_total_profit[7] = stop_loss_factor
+                    max_total_profit[8] = (stop_loss_price_now, take_profit_price_now)
+
+    if max_total_profit[0] > 1000:
+        SIGNALS.append((ticker, max_total_profit))
+
+
+def check_strategy_macd(df):
+    intervals = []
+
+    for i in [9, 21, 34, 50, 100, 150, 200]:
+        df.ta.ema(length=i, append=True, col_names=(f'EMA{i}',))
+        intervals.append(i)
+
+    df.ta.macd(append=True, col_names=('MACD', 'MACD_hist', 'MACD_signal'))
+
+    df = df[200:].copy()
+    last_index = df.shape[0] - 1
+
+    if last_index < 100:
+        return None
+
+    purchase_price = 0
+    stop_loss_price = 0
+    take_profit_price = 0
+    max_total_profit = [1000, 0, 0, 0, 0, 1000, "", 2, 0]
+
+    for i1 in intervals:
+        for stop_loss_factor in [0.1, 0.3, 0.5, 1, 1.1, 1.5, 2, 2.5, 3]:
+            ema1 = f'EMA{i1}'
+
+            signal = False
+            if df['Close'].values[last_index] > df[ema1].values[last_index]:
+                if df['MACD_hist'].values[last_index] > 0 > df['MACD_hist'].values[last_index - 1]:
+                    if df['MACD'].values[last_index] < 0:
+                        signal = True
+
+                        stop_loss_price_now = df['Close'].values[last_index] - stop_loss_factor * df['ATR'].values[
+                            last_index]
+                        take_profit_price_now = df['Close'].values[last_index] + 3 * stop_loss_factor * \
+                                                df['ATR'].values[last_index]
+
+
+            if not signal:
+                # no signal for now, no need to check the
+                # effectiveness of the strategy on history data
+                continue
 
             total_profit = 1000
             number_of_deals = 0
@@ -43,20 +259,18 @@ def run_backtest(ticker='AAPL', period='700d'):
             average_period = 0
 
             for i, (index, row) in enumerate(df.iterrows()):
+                stop_loss_percent = (row['Close'] - stop_loss_factor * row['ATR']) / row['Close']
 
-                # crossover
                 if purchase_price == 0:
-                    if row['Close'] > row[ema1] and df[t2].values[i-1] < 0 < row[t2]:
-                        purchase_price = row['Close']
-                        # stop_loss_price = purchase_price * 0.94
-                        # take_profit_price = purchase_price * 1.21
-                        stop_loss_price = purchase_price - 2 * row['ATR']
-                        take_profit_price = purchase_price + 6 * row['ATR']
+                    if row['Close'] > row[ema1]:
+                        if row['MACD'] < 0:
+                            if row['MACD_hist'] > 0 > df['MACD_hist'].values[i - 1]:
+                                if stop_loss_percent > MAX_STOP_LOSS:
+                                    purchase_price = row['Close']
+                                    stop_loss_price = purchase_price - stop_loss_factor * row['ATR']
+                                    take_profit_price = purchase_price + 3 * stop_loss_factor * row['ATR']
 
-                        purchase_index = i
-
-                        # print('loss', 100 * (2 * row['ATR'] / purchase_price))
-                        # print('profit', 100 * (6 * row['ATR'] / purchase_price))
+                                    purchase_index = i
                 else:
                     if row['Low'] < stop_loss_price:
                         total_profit = (stop_loss_price/purchase_price) * total_profit
@@ -64,8 +278,8 @@ def run_backtest(ticker='AAPL', period='700d'):
                         number_of_deals += 1
 
                         average_period += i - purchase_index
+
                     elif row['High'] > take_profit_price:
-                        # good deal:
                         total_profit = (take_profit_price/purchase_price) * total_profit
                         purchase_price = 0
                         number_of_deals += 1
@@ -73,26 +287,163 @@ def run_backtest(ticker='AAPL', period='700d'):
 
                         average_period += i - purchase_index
 
-            average_period = average_period / number_of_deals if number_of_deals > 0 else 1
-            if max_total_profit[0] < total_profit:
+            average_period = int(average_period / number_of_deals) if number_of_deals > 0 else 1
+            if max_total_profit[0] < total_profit and good_deals / number_of_deals > 0.45:
                 max_total_profit[0] = total_profit
                 max_total_profit[1] = ema1
-                max_total_profit[2] = t2
+                max_total_profit[2] = 0
                 max_total_profit[3] = number_of_deals
                 max_total_profit[4] = good_deals
                 max_total_profit[5] = average_period
+                max_total_profit[6] = "Close higher than EMA and MACD crossover"
+                max_total_profit[7] = stop_loss_factor
+                max_total_profit[8] = (stop_loss_price_now, take_profit_price_now)
 
-        print(max_total_profit)
+    if max_total_profit[0] > 1000:
+        SIGNALS.append((ticker, max_total_profit))
 
-    print(f'Max result: {max_total_profit[0]}')
-    print(f'WMA1: {max_total_profit[1]}')
-    print(f'Super trend: {max_total_profit[2]}')
-    print(f'number of total deals: {max_total_profit[3]}')
-    print(f'number of good deals: {max_total_profit[4]}')
-    print(f'average period of hold: {max_total_profit[5]}')
+
+def check_strategy_candles(df):
+
+    df.ta.cdl_pattern(append=True, name=["morningstar", "hammer", "engulfing"])
+    df.ta.ema(length=200, append=True, col_names=('EMA200',))
+
+    df = df[200:].copy()
+    last_index = df.shape[0] - 1
+
+    if last_index < 100:
+        return None
+
+    purchase_price = 0
+    stop_loss_price = 0
+    take_profit_price = 0
+    stop_loss_price_now = 0
+    take_profit_price_now = 0
+    max_total_profit = [1000, 0, 0, 0, 0, 1000, "", 2, 0]
+
+    df['morningstar_and_hammer'] = df['CDL_MORNINGSTAR'] + df['CDL_HAMMER']
+    df['morningstar_and_engulfing'] = df['CDL_MORNINGSTAR'] + df['CDL_ENGULFING']
+    df['engulfing_and_hammer'] = df['CDL_ENGULFING'] + df['CDL_HAMMER']
+    df['all_candle_patterns'] = df['CDL_MORNINGSTAR'] + df['CDL_HAMMER'] + df['CDL_ENGULFING']
+    patterns = ['CDL_MORNINGSTAR', 'CDL_HAMMER', 'CDL_ENGULFING', 'morningstar_and_hammer',
+                'morningstar_and_engulfing', 'engulfing_and_hammer', 'all_candle_patterns']
+
+    for p in patterns:
+        for stop_loss_factor in [0.1, 0.3, 0.5, 1, 1.1, 1.5, 2, 2.5, 3]:
+            signal = False
+            if df['Close'].values[last_index] > df['EMA200'].values[last_index]:
+                if df[p].values[last_index] > 0:
+                    signal = True
+                    stop_loss_price_now = df['Close'].values[last_index] - stop_loss_factor * df['ATR'].values[last_index]
+                    take_profit_price_now = df['Close'].values[last_index] + 3 * stop_loss_factor * df['ATR'].values[last_index]
+
+            if not signal:
+                # no signal for now, no need to check the
+                # effectiveness of the strategy on history data
+                continue
+
+            total_profit = 1000
+            number_of_deals = 0
+            good_deals = 0
+            purchase_index = 0
+            average_period = 0
+
+            for i, (index, row) in enumerate(df.iterrows()):
+                stop_loss_percent = (row['Close'] - stop_loss_factor * row['ATR']) / row['Close']
+
+                if purchase_price == 0:
+                    if row['Close'] > row['EMA200']:
+                        if row[p] > 0:
+                            if stop_loss_percent > MAX_STOP_LOSS:
+                                purchase_price = row['Close']
+                                stop_loss_price = purchase_price - stop_loss_factor * row['ATR']
+                                take_profit_price = purchase_price + 3 * stop_loss_factor * row['ATR']
+
+                                purchase_index = i
+                else:
+                    if row['Low'] < stop_loss_price:
+                        total_profit = (stop_loss_price/purchase_price) * total_profit
+                        purchase_price = 0
+                        number_of_deals += 1
+
+                        average_period += i - purchase_index
+
+                    elif row['High'] > take_profit_price:
+                        total_profit = (take_profit_price/purchase_price) * total_profit
+                        purchase_price = 0
+                        number_of_deals += 1
+                        good_deals += 1
+
+                        average_period += i - purchase_index
+
+            average_period = int(average_period / number_of_deals) if number_of_deals > 0 else 1
+            if max_total_profit[0] < total_profit and good_deals / number_of_deals > 0.45:
+                max_total_profit[0] = total_profit
+                max_total_profit[1] = p
+                max_total_profit[2] = 0
+                max_total_profit[3] = number_of_deals
+                max_total_profit[4] = good_deals
+                max_total_profit[5] = average_period
+                max_total_profit[6] = p
+                max_total_profit[7] = stop_loss_factor
+                max_total_profit[8] = (stop_loss_price_now, take_profit_price_now, purchase_price)
+
+
+    if max_total_profit[0] > 1000:
+        SIGNALS.append((ticker, max_total_profit))
 
 
 if __name__ == '__main__':
 
-    ticker = 'NVDA'
-    run_backtest(ticker, period='500d')
+    for ticker in tqdm(TICKERS[600:900]):
+        df = get_data(ticker)
+
+        if CHECK_PERIOD > 0:
+            DATA_TO_CHECK[ticker] = df.tail(CHECK_PERIOD)
+            df = df.iloc[:-CHECK_PERIOD]
+
+        # if df.iloc[-1]['volume'] < 2 * (10 ** 5):
+        #     continue
+
+        df.ta.atr(append=True, col_names=('ATR',))
+        df.ta.ema(length=50, append=True, col_names=('EMA50_X',))
+
+        # check_strategy_candles(df.copy())
+        # check_strategy_super_trend(df.copy())
+        check_strategy_wma_crossover(df.copy())
+        # check_strategy_macd(df.copy())
+
+    # Remove all signals that lead to very long waiting
+    expected_time_medium = 1.1 * sum([s[1][5] for s in SIGNALS]) / len(SIGNALS)
+    SIGNALS = [s for s in SIGNALS if s[1][5] < expected_time_medium]
+
+    # Remove signals that give less than 45% of success rate
+    SIGNALS = [s for s in SIGNALS if s[1][4] / s[1][3] > 0.45]
+
+    total_good_deals = 0
+    deals_to_check = 20
+    for s in sorted(SIGNALS, key=lambda x: x[1][0], reverse=True)[:deals_to_check]:
+        print(f"{s[0]}: win rate {100*s[1][4] / s[1][3]:.1f}, period {s[1][5]}"
+              f" stop loss & take profit: {s[1][8][0]:.2f} {s[1][8][1]:.2f}")
+        # print(s[1][6])
+
+        if CHECK_PERIOD > 0:
+            status = 0
+            for i, (index, row) in enumerate(DATA_TO_CHECK[s[0]].iterrows()):
+                if status == 0:
+                    if row['Low'] < s[1][8][0]:
+                        print('Failed!', s)
+                        status = -1
+                    elif row['High'] > s[1][8][1]:
+                        print('Profit!')
+                        status = 1
+
+            if status > 0:
+                total_good_deals += 1
+            elif status == 0:
+                print('Not ready yet')
+
+        print('- ' * 20)
+        print()
+
+    print(f'WIN RATE TOTAL: {100 * total_good_deals / deals_to_check:.1f} %')

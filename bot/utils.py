@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 
 now = datetime.now()
-START = now - timedelta(days=2000)
+START = now - timedelta(days=500)
 END = now + timedelta(days=1)
 
 with open('/Users/timur.nurlygaianov/api_key.txt', encoding='utf-8', mode='r') as f:
@@ -37,7 +37,7 @@ def get_tickers_polygon(limit=1000):
         with open(file_name, 'r') as f:
             result = set(f.readlines())
             result = set([r.strip() for r in result])
-            return list(result)[:limit]
+            return sorted(list(result)[:limit])
 
     # print('Collecting list of exchanges...')
     # exchanges = pd.DataFrame(client.get_exchanges(asset_class='stocks', locale='us'))
@@ -126,6 +126,7 @@ def get_data(ticker='AAPL', period='day'):
             df = pd.DataFrame(data, index=indexes)
             df.to_excel(file_name, index=True, header=True)
 
+        """
         df.ta.cdl_pattern(append=True, name=["doji", "morningstar", "hammer", "engulfing", "shootingstar"])
 
         df.ta.ema(length=7, append=True, col_names=('EMA7',))
@@ -140,6 +141,7 @@ def get_data(ticker='AAPL', period='day'):
         df.ta.bbands(col_names=('L', 'M', 'U', 'B', 'P'), append=True)
 
         df.ta.atr(append=True, col_names=('ATR',))
+        """
     except Exception as e:
         print(f'No data for {ticker} {e}')
 
