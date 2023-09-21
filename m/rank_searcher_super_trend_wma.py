@@ -9,7 +9,7 @@ from bot.utils import get_data
 from bot.utils import get_tickers_polygon
 
 
-PERIOD = 20
+PERIOD = 40
 SELECTED = []
 PASSED = []
 
@@ -45,24 +45,30 @@ def check(ticker='AAPL'):
         return None
 
     signal1 = ha_row['Open'] / row['WMA50'] < 1.1
-    signal2 = row['WMA50'] / row['EMA200'] < 1.2
+    signal2 = row['WMA50'] / row['EMA200'] < 1.1
+
+    stop_loss = row['Low'] - 1.1 * row['ATR']
 
     if row['Close'] > row['Open'] > row['WMA50'] > row['EMA200']:
         if row['S_trend_d'] > 0 and ha_row['S_trend_d'] > 0:
             if ha_row['Open'] < ha_row['Close']:    # Green Heikin-Ashi candle
                 if ha_row['Open'] == ha_row['Low']:   # Candle without tail in the bottom
+                    # if ha_row_previous['Open'] > ha_row_previous['Low']:  # ?
                     if ha_row['Close'] > ha_row_previous['Close']:
-                        if signal1 and signal2:
+                        if signal1 and signal2 and stop_loss / row['Close'] > 0.9:
                             SELECTED.append(ticker)
 
                             state = 'not ready'
                             for i, (index, check_row) in enumerate(check_data.iterrows()):
                                 if state == 'not ready':
-                                    if check_row['Low'] < row['Low'] - 1.1 * row['ATR']:
-                                        state = f"failed {100 * ((row['Low'] - 1.1 * row['ATR']) / row['Close'] - 1):.2f}"
+                                    if check_row['Low'] < stop_loss:
+                                        state = f"failed {100 * (stop_loss / row['Close'] - 1):.2f}"
+                                        print(row.name)
+                                        break
                                     elif check_row['High'] > row['Close'] + 2 * row['ATR']:
                                         state = f"passed +{100 * 2 * row['ATR'] / row['Close']:.2f}"
                                         PASSED.append(ticker)
+                                        break
 
                             print(ticker, state)
                             # print(row)

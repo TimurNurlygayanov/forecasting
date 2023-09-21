@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 
 now = datetime.now()
-START = now - timedelta(days=500)
+START = now - timedelta(days=1500)
 END = now + timedelta(days=1)
 
 with open('/Users/timur.nurlygaianov/api_key.txt', encoding='utf-8', mode='r') as f:

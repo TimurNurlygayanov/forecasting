@@ -15,7 +15,7 @@ SIGNALS = []
 DATA_TO_CHECK = {}
 CHECK_PERIOD = 20
 MAX_STOP_LOSS = 0.9
-RISK_REWARD_RATE = 2
+RISK_REWARD_RATE = 3
 
 
 def check_strategy_super_trend(df):
@@ -26,7 +26,7 @@ def check_strategy_super_trend(df):
         df.ta.wma(length=i, append=True, col_names=(f'WMA{i}',))
         intervals.append(i)
 
-    for i in [10, 12, 21, 34]:
+    for i in [10, 34]:
         for j in [1.5, 2, 2.5, 3, 4]:
             df.ta.supertrend(append=True, length=i, multiplier=j,
                              col_names=(f'S_trend_{i}_{j}', f'S_trend_d_{i}_{j}', f'S_trend_l_{i}_{j}', f'S_trend_s_{i}_{j}',))
@@ -45,7 +45,7 @@ def check_strategy_super_trend(df):
 
     for i1 in intervals:
         for t2 in trends:
-            for stop_loss_factor in [0.1, 0.3, 0.5, 1, 1.1, 1.5, 2, 2.5, 3]:
+            for stop_loss_factor in [1, 1.1, 1.5, 2]:
                 ema1 = f'WMA{i1}'
 
                 # Check if we got any signals for the last 3 days
@@ -116,8 +116,8 @@ def check_strategy_super_trend(df):
 def check_strategy_wma_crossover(df):
     intervals = []
 
-    for i in range(3, 150, 3):
-        df.ta.wma(length=i, append=True, col_names=(f'WMA{i}',))
+    for i in range(3, 100, 5):
+        df.ta.ema(length=i, append=True, col_names=(f'WMA{i}',))
         intervals.append(i)
 
     df = df[200:].copy()
@@ -126,8 +126,8 @@ def check_strategy_wma_crossover(df):
     if last_index < 100:
         return None
 
-    if df['Close'].values[last_index] < df['EMA50_X'].values[last_index]:
-        return None
+    # if df['Close'].values[last_index] < df['EMA50_X'].values[last_index]:
+    #     return None
 
     purchase_price = 0
     stop_loss_price = 0
@@ -139,7 +139,7 @@ def check_strategy_wma_crossover(df):
             if i1 >= i2:
                 continue
 
-            for stop_loss_factor in [0.1, 0.3, 0.5, 1, 1.1, 1.5, 2, 2.5, 3]:
+            for stop_loss_factor in [1, 1.1, 1.5, 2]:
                 wma1 = f'WMA{i1}'
                 wma2 = f'WMA{i2}'
 
@@ -148,14 +148,18 @@ def check_strategy_wma_crossover(df):
 
                 # Check if we got any signals for the last 3 days
                 signal = False
+
                 if df[wma1].values[last_index] > df[wma2].values[last_index]:
                     if df[wma1].values[last_index - 1] < df[wma2].values[last_index - 1]:
-                        signal = True
+                        current_price = df['Close'].values[last_index]
 
-                        stop_loss_price_now = df['Close'].values[last_index] - stop_loss_factor * df['ATR'].values[
-                            last_index]
-                        take_profit_price_now = df['Close'].values[last_index] + RISK_REWARD_RATE * stop_loss_factor * \
-                                                df['ATR'].values[last_index]
+                        # low = df['Low'].values[last_index]
+                        # last_swing_low_now = min(df['Low'].values[last_index - 10:])
+                        stop_loss_price_now = current_price - stop_loss_factor * df['ATR'].values[last_index]
+
+                        if stop_loss_price_now / current_price > MAX_STOP_LOSS:
+                            signal = True
+                            take_profit_price_now = current_price + RISK_REWARD_RATE * abs(current_price - stop_loss_price_now)
 
                 if not signal:
                     # no signal for now, no need to check the
@@ -169,14 +173,21 @@ def check_strategy_wma_crossover(df):
                 average_period = 0
 
                 for i, (index, row) in enumerate(df.iterrows()):
-                    stop_loss_percent = (row['Close'] - stop_loss_factor * row['ATR']) / row['Close']
+                    if i < 10:
+                        continue
+
+                    # get the lowest point from the past 20 candles:
+                    # last_swing_low = min(df['Low'].values[i - 10:i])
+                    stop_loss_price = row['Close'] - stop_loss_factor * row['ATR']
 
                     if purchase_price == 0:
                         if row[wma1] > row[wma2] and df[wma1].values[i-1] < df[wma2].values[i-1]:
-                            if stop_loss_percent > MAX_STOP_LOSS:
+                            # if row['Close'] > row['EMA50_X']:
+                            if stop_loss_price / row['Close'] > MAX_STOP_LOSS:
                                 purchase_price = row['Close']
-                                stop_loss_price = purchase_price - stop_loss_factor * row['ATR']
-                                take_profit_price = purchase_price + RISK_REWARD_RATE * stop_loss_factor * row['ATR']
+
+                                take_profit_price = purchase_price + RISK_REWARD_RATE * abs(
+                                    purchase_price - stop_loss_price)
 
                                 purchase_index = i
                     else:
@@ -196,16 +207,18 @@ def check_strategy_wma_crossover(df):
                             average_period += i - purchase_index
 
                 average_period = int(average_period / number_of_deals) if number_of_deals > 0 else 1
-                if max_total_profit[0] < total_profit and good_deals / number_of_deals > 0.45:
-                    max_total_profit[0] = total_profit
-                    max_total_profit[1] = wma1
-                    max_total_profit[2] = wma2
-                    max_total_profit[3] = number_of_deals
-                    max_total_profit[4] = good_deals
-                    max_total_profit[5] = average_period
-                    max_total_profit[6] = "WMA crossover"
-                    max_total_profit[7] = stop_loss_factor
-                    max_total_profit[8] = (stop_loss_price_now, take_profit_price_now)
+                if max_total_profit[0] < total_profit:
+                    if good_deals / number_of_deals > 0.45:
+                        if good_deals > 3 and average_period > 1:
+                            max_total_profit[0] = total_profit
+                            max_total_profit[1] = wma1
+                            max_total_profit[2] = wma2
+                            max_total_profit[3] = number_of_deals
+                            max_total_profit[4] = good_deals
+                            max_total_profit[5] = average_period
+                            max_total_profit[6] = "WMA crossover"
+                            max_total_profit[7] = stop_loss_factor
+                            max_total_profit[8] = (stop_loss_price_now, take_profit_price_now)
 
     if max_total_profit[0] > 1000:
         SIGNALS.append((ticker, max_total_profit))
@@ -376,17 +389,19 @@ def check_strategy_candles(df):
 
                         average_period += i - purchase_index
 
-            average_period = int(average_period / number_of_deals) if number_of_deals > 0 else 1
-            if max_total_profit[0] < total_profit and good_deals / number_of_deals > 0.45:
-                max_total_profit[0] = total_profit
-                max_total_profit[1] = p
-                max_total_profit[2] = 0
-                max_total_profit[3] = number_of_deals
-                max_total_profit[4] = good_deals
-                max_total_profit[5] = average_period
-                max_total_profit[6] = p
-                max_total_profit[7] = stop_loss_factor
-                max_total_profit[8] = (stop_loss_price_now, take_profit_price_now, purchase_price)
+            average_period = average_period / number_of_deals if number_of_deals > 0 else 1
+            if max_total_profit[0] < total_profit:
+                if good_deals / number_of_deals > 0.45:
+                    if good_deals > 3:
+                        max_total_profit[0] = total_profit
+                        max_total_profit[1] = p
+                        max_total_profit[2] = 0
+                        max_total_profit[3] = number_of_deals
+                        max_total_profit[4] = good_deals
+                        max_total_profit[5] = average_period
+                        max_total_profit[6] = p
+                        max_total_profit[7] = stop_loss_factor
+                        max_total_profit[8] = (stop_loss_price_now, take_profit_price_now, purchase_price)
 
 
     if max_total_profit[0] > 1000:
@@ -395,15 +410,18 @@ def check_strategy_candles(df):
 
 if __name__ == '__main__':
 
-    for ticker in tqdm(TICKERS[600:900]):
+    date_printed = False
+
+    for ticker in tqdm(TICKERS[:300]):
         df = get_data(ticker)
 
         if CHECK_PERIOD > 0:
             DATA_TO_CHECK[ticker] = df.tail(CHECK_PERIOD)
             df = df.iloc[:-CHECK_PERIOD]
 
-        # if df.iloc[-1]['volume'] < 2 * (10 ** 5):
-        #     continue
+        if not date_printed:
+            print(f'Date of trade: {df.iloc[-1].name}')
+            date_printed = True
 
         df.ta.atr(append=True, col_names=('ATR',))
         df.ta.ema(length=50, append=True, col_names=('EMA50_X',))
@@ -413,6 +431,10 @@ if __name__ == '__main__':
         check_strategy_wma_crossover(df.copy())
         # check_strategy_macd(df.copy())
 
+    if len(SIGNALS) == 0:
+        print('No signals detected!')
+        exit(1)
+
     # Remove all signals that lead to very long waiting
     expected_time_medium = 1.1 * sum([s[1][5] for s in SIGNALS]) / len(SIGNALS)
     SIGNALS = [s for s in SIGNALS if s[1][5] < expected_time_medium]
@@ -421,11 +443,11 @@ if __name__ == '__main__':
     SIGNALS = [s for s in SIGNALS if s[1][4] / s[1][3] > 0.45]
 
     total_good_deals = 0
-    deals_to_check = 20
+    deals_to_check = min(20, len(SIGNALS))
+
     for s in sorted(SIGNALS, key=lambda x: x[1][0], reverse=True)[:deals_to_check]:
         print(f"{s[0]}: win rate {100*s[1][4] / s[1][3]:.1f}, period {s[1][5]}"
               f" stop loss & take profit: {s[1][8][0]:.2f} {s[1][8][1]:.2f}")
-        # print(s[1][6])
 
         if CHECK_PERIOD > 0:
             status = 0
@@ -435,13 +457,13 @@ if __name__ == '__main__':
                         print('Failed!', s)
                         status = -1
                     elif row['High'] > s[1][8][1]:
-                        print('Profit!')
+                        print('Profit!', s)
                         status = 1
 
             if status > 0:
                 total_good_deals += 1
             elif status == 0:
-                print('Not ready yet')
+                print('Not ready yet', s)
 
         print('- ' * 20)
         print()
