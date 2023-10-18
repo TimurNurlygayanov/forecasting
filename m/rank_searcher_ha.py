@@ -61,7 +61,7 @@ def check(ticker='AAPL'):
     if row['ATR'] / row['Close'] < 0.01:
         return None
 
-    stop_loss = row['Low'] - 1.1 * row['ATR']
+    stop_loss = row['Close'] - 1.1 * row['ATR']
 
     if dodge_signal and previous_strong and current_strong and red_area_before:
         # if res == [1, 1, 1, 1, 1, 0, 1] and row['High'] > df.iloc[-2]['High']:
