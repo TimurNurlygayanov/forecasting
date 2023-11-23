@@ -9,6 +9,7 @@ import pandas as pd
 from crypto_forex.utils import ALL_TICKERS
 from crypto_forex.utils import get_data
 from crypto_forex.utils import get_state
+from crypto_forex.bot import send_message
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
@@ -24,9 +25,17 @@ results = []
 step_size = 5  # make sure we do not use similar data for training and verification
 medium_stop_loss = 0
 STOP_LOSSES = {}
+LEARNING_MODE = False
+SAVE_DATA = False
+DAYS = 20
+model_filename = 'forex_prediction_large.cbm'
+
+if LEARNING_MODE:
+    SAVE_DATA = True
+    DAYS = 500
 
 for ticker in tqdm(ALL_TICKERS):
-    df = get_data(ticker, save_data=False, period='minute', multiplier=5)
+    df = get_data(ticker, save_data=SAVE_DATA, period='minute', multiplier=5, days=DAYS)
 
     if df is None or len(df) < 401:
         continue
@@ -40,35 +49,47 @@ for ticker in tqdm(ALL_TICKERS):
 
     df.index = pd.to_datetime(df.index, format='%Y-%m-%d, %H:%M:%S')
 
-    for i, (index, row) in enumerate(df.iterrows()):
-        # Only take every K measurement
-        if i % step_size != 0:
-            continue
+    if LEARNING_MODE:
+        for i, (index, row) in enumerate(df.iterrows()):
+            # Only take every K measurement
+            if i % step_size != 0:
+                continue
 
-        result = 0
+            result = 0
 
-        if len(df) - step_size * 2 > i > 200:
-            state = get_state(df=df, dfHA=dfHA, i=i, step_size=step_size)
+            if len(df) - step_size * 2 > i > 200:
+                state = get_state(df=df, dfHA=dfHA, i=i, step_size=step_size)
 
-            max_profit = max(df['High'].values[i+1:i+step_size]) - row['Close']
-            max_lose = min(df['Low'].values[i+1:i+step_size]) - row['Close']
+                max_profit = max(df['High'].values[i+1:i+step_size]) - row['Close']
+                max_lose = min(df['Low'].values[i+1:i+step_size]) - row['Close']
 
-            # print(max_profit, max_lose)
+                # print(max_profit, max_lose)
 
-            # 2&6% gives more deals, 2&10 gives too small
-            # if max_lose > -0.0002 and max_profit > 0.0008:
-            # if max_lose >= 0 or abs(max_lose * 2) < max_profit:
-            # if df['green'].values[i+1] and df['green'].values[i+2] and df['green'].values[i+3]:
-            if 9 < index.hour < 22 and index.weekday() < 5:
-                if max_lose >= 0 or abs(max_lose * 1.2) < max_profit:
-                    result = 1
+                # 2&6% gives more deals, 2&10 gives too small
+                # if max_lose > -0.0002 and max_profit > 0.0008:
+                # if max_lose >= 0 or abs(max_lose * 2) < max_profit:
+                # if df['green'].values[i+1] and df['green'].values[i+2] and df['green'].values[i+3]:
+                if 9 < index.hour < 22 and index.weekday() < 5:
+                    # if max_lose >= 0 or abs(max_lose * 1.5) < max_profit:
+                    if min(df['Low'].values[i+1:i+step_size]) > row['Low']:
+                        # if abs(max_lose * 2) < max_profit:
+                        # if max_profit > row['ATR']:
+                        # if max_profit / row['Close'] * 100 > 0.1:
+                        if max_profit > row['ATR']:
+                            result = 1
 
-                new_matrix.append(state)
-                results.append(result)
+                    new_matrix.append(state)
+                    results.append(result)
+
+                    # double good result:
+                    if result:
+                        for k in range(0, 5):
+                            new_matrix.append(state)
+                            results.append(result)
 
     latest_state[ticker] = get_state(df=df, dfHA=dfHA, i=len(df) - 1, step_size=step_size)
     latest_state[ticker] = get_state(df=df, dfHA=dfHA, i=len(df) - 2, step_size=step_size)
-    latest_state[ticker] = get_state(df=df, dfHA=dfHA, i=len(df) - 3, step_size=step_size)
+    # latest_state[ticker] = get_state(df=df, dfHA=dfHA, i=len(df) - 3, step_size=step_size)
 
 
 def evaluate_model(model_x, X_test, y_test):
@@ -98,34 +119,26 @@ def evaluate_model(model_x, X_test, y_test):
         pass
 
 
-def custom_precision_loss(y_test, y_pred):
-    # Replace this with your desired precision calculation.
-    # You might use the precision formula or any other custom calculation.
-    precision = precision_score(y_test, y_pred, zero_division=1)
+if LEARNING_MODE:
+    model = CatBoostClassifier(iterations=10000, depth=10, thread_count=9, learning_rate=0.001, loss_function='Logloss')
+    # model = CatBoostClassifier(iterations=1000, depth=4, thread_count=9, learning_rate=0.001, loss_function='Logloss')
+    # model = CatBoostClassifier(iterations=10000, depth=10, thread_count=7, learning_rate=0.001,
+    #                            loss_function=custom_precision_loss, custom_metric=custom_precision_metric)
+    X_train, X_test, y_train, y_test = train_test_split(new_matrix, results, test_size=0.1, random_state=42)
 
-    # You can return 1 - precision as the loss to be minimized.
-    # The model will try to maximize precision.
-    return 1 - precision
+    print(f'Positive options in train dataset: {sum(y_train)} / {len(X_train)}')
+    print(f'Positive options in evaluation dataset: {sum(y_test)} / {len(X_test)}')
 
+    # sample_weights = [1 if y == 1 else 0.9 for y in y_train]
+    model.fit(X_train, y_train, eval_set=(X_test, y_test), verbose=False)  # sample_weight=sample_weights
 
-def custom_precision_metric(y_test, y_pred):
-    precision = precision_score(y_test, y_pred, zero_division=1)
-    return precision
+    evaluate_model(model, X_test, y_test)
 
+    model.save_model(model_filename)
+else:
+    model = CatBoostClassifier()
+    model.load_model(model_filename)
 
-model = CatBoostClassifier(iterations=10000, depth=10, thread_count=7, learning_rate=0.001, loss_function='Logloss')
-# model = CatBoostClassifier(iterations=1000, depth=4, thread_count=7, learning_rate=0.001, loss_function='Logloss')
-# model = CatBoostClassifier(iterations=10000, depth=10, thread_count=7, learning_rate=0.001,
-#                            loss_function=custom_precision_loss, custom_metric=custom_precision_metric)
-X_train, X_test, y_train, y_test = train_test_split(new_matrix, results, test_size=0.1, random_state=42)
-
-print(f'Positive options in train dataset: {sum(y_train)} / {len(X_train)}')
-print(f'Positive options in evaluation dataset: {sum(y_test)} / {len(X_test)}')
-
-# sample_weights = [1 if y == 1 else 0.9 for y in y_train]
-model.fit(X_train, y_train, eval_set=(X_test, y_test), verbose=False)  # sample_weight=sample_weights
-
-evaluate_model(model, X_test, y_test)
 
 print('* ' * 30)
 for ticker, state in latest_state.items():
@@ -134,5 +147,6 @@ for ticker, state in latest_state.items():
 
     if res == 1:
         print(ticker, res, prediction_proba)
+        send_message(f"{ticker} {prediction_proba[1]}")
 
 # get_features_importance(model)

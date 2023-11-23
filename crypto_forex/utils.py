@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 
 now = datetime.now()
-START = now - timedelta(days=200)
+START = now - timedelta(days=500)
 END = now + timedelta(days=1)
 
 # 'X:BTCUSD', 'X:ETHUSD', 'X:LTCUSD',
@@ -37,10 +37,15 @@ with open('/Users/timur.nurlygaianov/api_key2.txt', encoding='utf-8', mode='r') 
 client = RESTClient(api_key=api_key)
 
 
-def get_data(ticker='X:BTCUSD', period='hour', multiplier=1, save_data=True):  # minute
+def x_round(x):
+    return round(x*4)/4
+
+
+def get_data(ticker='X:BTCUSD', period='hour', multiplier=1, save_data=True, days=50):  # minute
     df = None
     indexes = []
     data = {'Close': [], 'Open': [], 'Low': [], 'High': [], 'vwap': [], 'volume': []}
+    START = now - timedelta(days=days)
 
     try:
         file_name = f'rl/data/{ticker}_hourly_{datetime.now().strftime("%Y-%m-%d")}.xlsx'

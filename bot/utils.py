@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 
 now = datetime.now()
-START = now - timedelta(days=50)
+START = now - timedelta(days=100)
 END = now + timedelta(days=1)
 
 
@@ -38,6 +38,7 @@ def get_tickers_polygon(limit=1000):
         with open(file_name, 'r') as f:
             result = set(f.readlines())
             result = set([r.strip() for r in result])
+
             return sorted(list(result)[:limit])
 
     # print('Collecting list of exchanges...')
