@@ -13,11 +13,11 @@ from tqdm import tqdm
 
 
 now = datetime.now()
-START = now - timedelta(days=100)
+START = now - timedelta(days=200)
 END = now + timedelta(days=1)
 
 
-with open('/Users/timur.nurlygaianov/api_key.txt', encoding='utf-8', mode='r') as f:
+with open('/Users/timur.nurlygaianov/api_key2.txt', encoding='utf-8', mode='r') as f:
     api_key = f.readlines()
     api_key = ''.join(api_key).strip()
 
@@ -101,13 +101,14 @@ def get_news(ticker):
     return results
 
 
-def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True):  # day
+def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=200):  # day
     df = None
     indexes = []
     data = {'Close': [], 'Open': [], 'Low': [], 'High': [], 'vwap': [], 'volume': []}
+    START = now - timedelta(days=days)
 
     try:
-        file_name = f'rl/data/{ticker}_daily_{datetime.now().strftime("%Y-%m-%d")}.xlsx'
+        file_name = f'rl/data/{ticker}_{period}_{datetime.now().strftime("%Y-%m-%d")}.xlsx'
         if os.path.isfile(file_name) and save_data:
             df = pd.read_excel(file_name, index_col=0)
         else:
