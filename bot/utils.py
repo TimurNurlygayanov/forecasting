@@ -11,6 +11,8 @@ import pandas as pd
 import pandas_ta  # for TA magic
 from tqdm import tqdm
 
+from forex_python.converter import CurrencyRates
+
 
 now = datetime.now()
 START = now - timedelta(days=200)
@@ -101,11 +103,25 @@ def get_news(ticker):
     return results
 
 
-def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=200):  # day
+def get_data_b(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=200):
+    START = now - timedelta(days=days)
+
+    c = CurrencyRates()
+    historical_rates = c.get_rates(ticker, start_date=START.strftime("%Y-%m-%d"),
+                                   end_date=END.strftime("%Y-%m-%d"))
+
+    return historical_rates
+
+
+def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=200,
+             start_date=None, end_date=None):
     df = None
     indexes = []
     data = {'Close': [], 'Open': [], 'Low': [], 'High': [], 'vwap': [], 'volume': []}
-    START = now - timedelta(days=days)
+
+    if not start_date and not end_date:
+        start_date = (now - timedelta(days=days)).strftime("%Y-%m-%d")
+        end_date = END.strftime("%Y-%m-%d")
 
     try:
         file_name = f'rl/data/{ticker}_{period}_{datetime.now().strftime("%Y-%m-%d")}.xlsx'
@@ -113,8 +129,8 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
             df = pd.read_excel(file_name, index_col=0)
         else:
             for a in client.list_aggs(ticker=ticker, multiplier=multiplier, timespan=period,  # "hour"
-                                      from_=START.strftime("%Y-%m-%d"),
-                                      to=END.strftime("%Y-%m-%d"),
+                                      from_=start_date,
+                                      to=end_date,
                                       limit=50000):
                 date = datetime.fromtimestamp(a.timestamp // 1000).strftime("%Y-%m-%d, %H:%M:%S")
 
@@ -127,7 +143,9 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
                 data['volume'].append(a.volume)
 
             df = pd.DataFrame(data, index=indexes)
-            df.to_excel(file_name, index=True, header=True)
+
+            if save_data:
+                df.to_excel(file_name, index=True, header=True)
 
         """
         df.ta.cdl_pattern(append=True, name=["doji", "morningstar", "hammer", "engulfing", "shootingstar"])

@@ -41,7 +41,8 @@ def check_recent_activity(closed_prices, level_price, current_price):
 
 # TICKERS = TICKERS[:200]
 for ticker in tqdm(TICKERS):
-    df = get_data(ticker, period='day', days=100)
+    df = get_data(ticker, period='hour', days=30)
+    df = df.iloc[:-50]
     df['ATR'] = 0
 
     if df is None or df.empty or len(df) < 20:
