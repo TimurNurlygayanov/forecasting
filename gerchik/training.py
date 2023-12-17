@@ -152,7 +152,7 @@ for ticker in tqdm(TICKERS):
             df.iloc[-1]['Open'] = df_small_timeframe.iloc[0]['Open']
 
             # Add empty data to show it later:
-            empty_rows = pd.DataFrame(index=range(10), columns=df_small_timeframe.columns)
+            empty_rows = pd.DataFrame(index=range(30), columns=df_small_timeframe.columns)
             df_small_timeframe = pd.concat([df_small_timeframe, empty_rows])
 
             empty_rows = pd.DataFrame(index=range(2), columns=df.columns)
@@ -203,7 +203,10 @@ for ticker in tqdm(TICKERS):
                             line=dict(color='black', width=3),
                             row=1, col=1)
 
-            pio.write_image(graph, f'training_data/{case_id}/daily.png', height=1500, width=3000)
+            pio.write_image(
+                graph, f'training_data/{case_id}/daily.png',
+                height=1000, width=2000
+            )
 
             # -------
 
@@ -245,4 +248,68 @@ for ticker in tqdm(TICKERS):
                             line=dict(color='black', width=3),
                             row=1, col=1)
 
-            pio.write_image(graph, f'training_data/{case_id}/5_minutes.png', height=1500, width=3000)
+            pio.write_image(
+                graph, f'training_data/{case_id}/5_minutes.png',
+                height=1000, width=2000
+            )
+
+            # Save data for the future use
+            df.to_csv(f'training_data/{case_id}/daily_before.csv', index=True)
+            df_small_timeframe.to_csv(f'training_data/{case_id}/5_minutes_before.csv', index=True)
+
+            df_small_timeframe_after = get_data(
+                ticker,
+                period='minute', multiplier=5,
+                start_date=start,
+                end_date=end_moment + timedelta(minutes=5*30),
+                save_data=False
+            )
+
+            df_small_timeframe_after.to_csv(
+                f'training_data/{case_id}/5_minutes_after.csv', index=True
+            )
+
+            # ---- write imge after
+
+            graph = make_subplots(rows=1, cols=1, shared_xaxes=False,
+                                  subplot_titles=['5 minutes timeframe'])
+            graph.update_layout(title="", xaxis_rangeslider_visible=False,
+                                xaxis=dict(showticklabels=False),
+                                paper_bgcolor='white',
+                                plot_bgcolor='white')
+
+            graph.add_ohlc(x=df_small_timeframe_after.index,
+                           open=df_small_timeframe_after['Open'],
+                           high=df_small_timeframe_after['High'],
+                           low=df_small_timeframe_after['Low'],
+                           close=df_small_timeframe_after['Close'],
+                           decreasing={'line': {'color': 'black', 'width': 2}},
+                           increasing={'line': {'color': 'black', 'width': 2}},
+                           row=1, col=1, showlegend=False)
+
+            graph.update_xaxes(showticklabels=False, row=1, col=1)
+            graph.update_xaxes(rangeslider={'visible': False}, row=1, col=1)
+
+            custom_ticks = [round(selected_level, 2),
+                            df_small_timeframe_after['High'].max(),
+                            df_small_timeframe_after['Low'].min(),
+                            ]  # Add other default values as needed
+            custom_tick_text = [str(value) for value in custom_ticks]
+            graph.update_layout(
+                yaxis=dict(
+                    tickvals=custom_ticks,
+                    ticktext=custom_tick_text,
+                    showgrid=True,
+                    gridcolor='rgba(0,0,0,0.1)'
+                )
+            )
+
+            graph.add_shape(type='line', x0=0, x1=len(df_small_timeframe_after),
+                            y0=selected_level, y1=selected_level,
+                            line=dict(color='black', width=3),
+                            row=1, col=1)
+
+            pio.write_image(
+                graph, f'training_data/{case_id}/5_minutes_after.png',
+                height=1000, width=2000
+            )
