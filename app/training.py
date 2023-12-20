@@ -5,13 +5,17 @@ from bot.utils import get_data
 # from crypto_forex.utils import ALL_TICKERS
 
 from tqdm import tqdm
+import json
 
 import pandas as pd
 from plotly.subplots import make_subplots
 import plotly.io as pio
+import plotly.graph_objects as go
+from plotly.utils import PlotlyJSONEncoder
 
 from datetime import datetime
 from datetime import timedelta
+
 
 # TICKERS = sorted(ALL_TICKERS)[:1]
 TICKERS = ['AMD']
@@ -105,7 +109,7 @@ for ticker in tqdm(TICKERS):
         prev_date = None
         for i, (index, row) in enumerate(df_small_timeframe.iterrows()):
             if row['Low'] < selected_level < row['High']:
-                if prev_date and i > 10:
+                if prev_date and i > 20:
 
                     # do not include level if we crossed ir withing last 10 small candles
                     skip_level = False
@@ -129,11 +133,21 @@ for ticker in tqdm(TICKERS):
 
         # TODO: make short_markers shorter, like only 3 points (start, end, middle)
         for small_timeframe_index, date_and_time in short_markers:
-            case_id = str(uuid.uuid4())
+            case_id = str(daily_index) + '_' + str(uuid.uuid4())
             os.makedirs(f'training_data/{case_id}')
 
+            # calculate level for stop loss - TVH
+            profit_factor = 3
+            tvh1 = selected_level + (0.2 * atr) * 0.1
+            level_stop = selected_level - (0.2 * atr) * 0.9
+            take_profit1 = tvh1 + profit_factor * 0.2 * atr
+
+            tvh2 = selected_level - (0.2 * atr) * 0.1
+            level_stop2 = selected_level + (0.2 * atr) * 0.9
+            take_profit2 = tvh2 - profit_factor * 0.2 * atr
+
             end_moment = datetime.strptime(date_and_time, "%Y-%m-%d, %H:%M:%S")
-            start_days = end_moment - timedelta(days=50)
+            start_days = end_moment - timedelta(days=100)
 
             df_small_timeframe = get_data(ticker, period='minute', multiplier=5,
                                           start_date=start,
@@ -152,14 +166,26 @@ for ticker in tqdm(TICKERS):
             df.iloc[-1]['Open'] = df_small_timeframe.iloc[0]['Open']
 
             # Add empty data to show it later:
-            empty_rows = pd.DataFrame(index=range(30), columns=df_small_timeframe.columns)
+            date_range = pd.date_range(
+                end_moment + timedelta(minutes=5),
+                periods=30, freq='5T'
+            )
+            date_strings = date_range.strftime('%Y-%m-%d, %H:%M:%S')
+
+            empty_rows = pd.DataFrame(index=date_strings,
+                                      columns=df_small_timeframe.columns)
+            empty_rows['Open'] = selected_level
+            empty_rows['Close'] = selected_level
+            empty_rows['Low'] = selected_level
+            empty_rows['High'] = selected_level
+
             df_small_timeframe = pd.concat([df_small_timeframe, empty_rows])
 
             empty_rows = pd.DataFrame(index=range(2), columns=df.columns)
             df = pd.concat([df, empty_rows])
 
             graph = make_subplots(rows=1, cols=1, shared_xaxes=False,
-                                  subplot_titles=['1 day timeframe'])
+                                  subplot_titles=[''])
             graph.update_layout(title="", xaxis_rangeslider_visible=False,
                                 xaxis=dict(showticklabels=False),
                                 paper_bgcolor='white',
@@ -170,14 +196,24 @@ for ticker in tqdm(TICKERS):
                            high=df['High'],
                            low=df['Low'],
                            close=df['Close'],
-                           decreasing={'line': {'color': 'black'}},
-                           increasing={'line': {'color': 'black'}},
+                           decreasing={'line': {'color': 'black', 'width': 4}},
+                           increasing={'line': {'color': 'black', 'width': 4}},
                            row=1, col=1, showlegend=False)
 
             graph.update_xaxes(showticklabels=False, row=1, col=1)
             graph.update_xaxes(rangeslider={'visible': False}, row=1, col=1)
 
-            custom_ticks_daily = [round(level, 2) for level in levels_prices]
+            # Filter daily levels to get rid of duplicates
+            prev_level = 0
+            levels_prices_filtered = []
+
+            for level in sorted(levels_prices):
+                if abs(prev_level - level) > 0.1 * atr:
+                    levels_prices_filtered.append(level)
+
+                prev_level = level
+
+            custom_ticks_daily = [round(level, 2) for level in levels_prices_filtered]
             custom_tick_text_daily = [str(value) for value in custom_ticks_daily]
 
             graph.update_layout(
@@ -185,22 +221,21 @@ for ticker in tqdm(TICKERS):
                     tickvals=custom_ticks_daily,
                     ticktext=custom_tick_text_daily,
                     showgrid=True,
-                    gridcolor='rgba(0,0,0,0.1)'
-                )
+                    gridcolor='rgba(0,0,0,0.1)',
+                    tickfont=dict(size=22)
+                ),
+                margin=dict(l=1, r=1, t=1, b=1)
             )
 
-            for t in RESULTS:
-                for level_type in RESULTS[t]:
-                    for level in RESULTS[t][level_type]:
-
-                        graph.add_shape(type='line', x0=0, x1=len(df), y0=level, y1=level,
-                                        line=dict(color='black', width=0.5),
-                                        row=1, col=1)
+            for level in custom_ticks_daily:
+                graph.add_shape(type='line', x0=0, x1=len(df), y0=level, y1=level,
+                                line=dict(color='black', width=0.7),
+                                row=1, col=1)
 
             # Add bold line for selected level
             graph.add_shape(type='line', x0=0, x1=len(df),
                             y0=selected_level, y1=selected_level,
-                            line=dict(color='black', width=3),
+                            line=dict(color='black', width=4),
                             row=1, col=1)
 
             pio.write_image(
@@ -211,7 +246,7 @@ for ticker in tqdm(TICKERS):
             # -------
 
             graph = make_subplots(rows=1, cols=1, shared_xaxes=False,
-                                  subplot_titles=['5 minutes timeframe'])
+                                  subplot_titles=[''])
             graph.update_layout(title="", xaxis_rangeslider_visible=False,
                                 xaxis=dict(showticklabels=False),
                                 paper_bgcolor='white',
@@ -230,28 +265,53 @@ for ticker in tqdm(TICKERS):
             graph.update_xaxes(rangeslider={'visible': False}, row=1, col=1)
 
             custom_ticks = [round(selected_level, 2),
+                            round(level_stop, 2),
+                            round(level_stop2, 2),
+                            round(take_profit1, 2),
+                            round(take_profit2, 2),
                             df_small_timeframe['High'].max(),
                             df_small_timeframe['Low'].min(),
                             ]  # Add other default values as needed
-            custom_tick_text = [str(value) for value in custom_ticks]
+
+            custom_ticks_filtered = []
+            for t in sorted(custom_ticks):
+                if not custom_ticks_filtered or abs(t - custom_ticks_filtered[-1]) > 0.2:
+                    custom_ticks_filtered.append(t)
+
+            custom_tick_text = [str(value) for value in custom_ticks_filtered]
             graph.update_layout(
                 yaxis=dict(
-                    tickvals=custom_ticks,
+                    tickvals=custom_ticks_filtered,
                     ticktext=custom_tick_text,
                     showgrid=True,
-                    gridcolor='rgba(0,0,0,0.1)'
-                )
+                    gridcolor='rgba(0,0,0,0.1)',
+                    tickfont=dict(size=22)
+                ),
+                margin=dict(l=1, r=1, t=1, b=1),
+                autosize=False,
+                width=2000,
+                height=1000,
             )
 
             graph.add_shape(type='line', x0=0, x1=len(df_small_timeframe),
                             y0=selected_level, y1=selected_level,
-                            line=dict(color='black', width=3),
+                            line=dict(color='black', width=4),
                             row=1, col=1)
+
+            for level in custom_ticks:
+                graph.add_shape(type='line', x0=0, x1=len(df_small_timeframe),
+                                y0=level, y1=level,
+                                line=dict(color='black', width=1),
+                                row=1, col=1)
 
             pio.write_image(
                 graph, f'training_data/{case_id}/5_minutes.png',
                 height=1000, width=2000
             )
+
+            with open(f'training_data/{case_id}/5_minutes.json', 'w+') as f:
+                json.dump(graph, cls=PlotlyJSONEncoder, fp=f)
+
 
             # Save data for the future use
             df.to_csv(f'training_data/{case_id}/daily_before.csv', index=True)
@@ -269,10 +329,10 @@ for ticker in tqdm(TICKERS):
                 f'training_data/{case_id}/5_minutes_after.csv', index=True
             )
 
-            # ---- write imge after
+            # ---- write image after
 
             graph = make_subplots(rows=1, cols=1, shared_xaxes=False,
-                                  subplot_titles=['5 minutes timeframe'])
+                                  subplot_titles=[''])
             graph.update_layout(title="", xaxis_rangeslider_visible=False,
                                 xaxis=dict(showticklabels=False),
                                 paper_bgcolor='white',
@@ -291,25 +351,73 @@ for ticker in tqdm(TICKERS):
             graph.update_xaxes(rangeslider={'visible': False}, row=1, col=1)
 
             custom_ticks = [round(selected_level, 2),
+                            round(level_stop, 2),
+                            round(level_stop2, 2),
+                            round(take_profit1, 2),
+                            round(take_profit2, 2),
                             df_small_timeframe_after['High'].max(),
                             df_small_timeframe_after['Low'].min(),
                             ]  # Add other default values as needed
-            custom_tick_text = [str(value) for value in custom_ticks]
+
+            custom_ticks_filtered = []
+            for t in sorted(custom_ticks):
+                if not custom_ticks_filtered or abs(t - custom_ticks_filtered[-1]) > 0.2:
+                    custom_ticks_filtered.append(t)
+
+            custom_tick_text = [str(value) for value in custom_ticks_filtered]
             graph.update_layout(
                 yaxis=dict(
-                    tickvals=custom_ticks,
+                    tickvals=custom_ticks_filtered,
                     ticktext=custom_tick_text,
                     showgrid=True,
-                    gridcolor='rgba(0,0,0,0.1)'
-                )
+                    gridcolor='rgba(0,0,0,0.1)',
+                    tickfont=dict(size=22)
+                ),
+                autosize=False,
+                width=2000,
+                height=1000,
+                margin=dict(l=1, r=1, t=1, b=1)
             )
 
             graph.add_shape(type='line', x0=0, x1=len(df_small_timeframe_after),
                             y0=selected_level, y1=selected_level,
-                            line=dict(color='black', width=3),
+                            line=dict(color='black', width=4),
                             row=1, col=1)
+
+            for level in custom_ticks:
+                graph.add_shape(type='line', x0=0, x1=len(df_small_timeframe),
+                                y0=level, y1=level,
+                                line=dict(color='black', width=1),
+                                row=1, col=1)
 
             pio.write_image(
                 graph, f'training_data/{case_id}/5_minutes_after.png',
                 height=1000, width=2000
             )
+
+            with open(f'training_data/{case_id}/5_minutes_after.json', 'w+') as f:
+                json.dump(graph, cls=PlotlyJSONEncoder, fp=f)
+
+            deal = f"""[GLOBAL]
+            atr={round(atr, 2)}
+            level={round(selected_level, 2)}
+            [DEAL1]
+            tvh={round(tvh1, 2)}
+            stop_loss={round(level_stop, 2)}
+            take_profit={round(take_profit1, 2)}
+            [DEAL2]
+            tvh={round(tvh2, 2)}
+            stop_loss={round(level_stop2, 2)}
+            take_profit={round(take_profit2, 2)}
+            [DEAL3]
+            tvh={round(tvh1, 2)}
+            stop_loss={round(selected_level - atr * 0.02, 2)}
+            take_profit={round(tvh1 + 5 * atr * 0.02, 2)}
+            [DEAL4]
+            tvh={round(tvh2, 2)}
+            stop_loss={round(selected_level + atr * 0.02, 2)}
+            take_profit={round(tvh2 - 5 * atr * 0.02, 2)}
+            """
+            with open(f'training_data/{case_id}/deal.ini',
+                      encoding='utf8', mode='w+') as f:
+                f.writelines('\n'.join([line.strip() for line in deal.split()]))
