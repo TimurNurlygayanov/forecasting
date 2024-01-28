@@ -1,24 +1,22 @@
-import uuid
+
 import os
 
 from bot.utils import get_data
-# from crypto_forex.utils import ALL_TICKERS
+from crypto_forex.utils import ALL_TICKERS
 
 from tqdm import tqdm
-import json
+import hashlib
 
 import pandas as pd
-from plotly.subplots import make_subplots
-import plotly.io as pio
-import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 from datetime import datetime
 from datetime import timedelta
 
+from utils import draw
 
-# TICKERS = sorted(ALL_TICKERS)[:1]
-TICKERS = ['AMD']
+
+TICKERS = sorted(ALL_TICKERS)[:1]
+# TICKERS = ['AMD']
 RESULTS = {}
 
 
@@ -42,8 +40,10 @@ for ticker in tqdm(TICKERS):
     mins = df[df['minima']]['Low'].tolist()
     maxs = df[df['maxima']]['High'].tolist()
 
-    df['candle_size'] = df['High'] - df['Low']
-    atr = df['candle_size'].mean()
+    df_short = df.iloc[-30:].copy()
+    df_short['candle_size'] = df_short['High'] - df_short['Low']
+    candle_sizes = sorted(df_short['candle_size'].tolist())[10:-10]  # get rid of large and small candles
+    atr = sum(candle_sizes) / len(candle_sizes)
 
     for price_level in mins + maxs:
         RESULTS[ticker]['trend_reversal'].add(price_level)
@@ -95,10 +95,11 @@ for ticker in tqdm(TICKERS):
             if row['Low'] < level < row['High']:
                 markers.append((i, (index, level)))
 
-    for daily_index, (date, selected_level) in markers:
-        start = date.split(',')[0] + ', 10:00:00'
+    for daily_index, (date, selected_level) in set(markers):
+        date_str = date.strftime("%Y-%m-%d, %H:%M:%S")
+        start = date_str.split(',')[0] + ', 10:00:00'
         start = datetime.strptime(start, "%Y-%m-%d, %H:%M:%S")
-        end = date.split(',')[0] + ', 23:59:59'
+        end = date_str.split(',')[0] + ', 21:00:00'
         end = datetime.strptime(end, "%Y-%m-%d, %H:%M:%S")
 
         df_small_timeframe = get_data(ticker, period='minute', multiplier=5,
@@ -132,8 +133,11 @@ for ticker in tqdm(TICKERS):
             prev_date = index
 
         # TODO: make short_markers shorter, like only 3 points (start, end, middle)
-        for small_timeframe_index, date_and_time in short_markers:
-            case_id = str(daily_index) + '_' + str(uuid.uuid4())
+        for small_timeframe_index, date_and_time in set(short_markers):
+            end_moment = date_and_time
+            start_days = end_moment - timedelta(days=100)
+
+            case_id = hashlib.md5((ticker + str(selected_level) + str(end_moment)).encode()).hexdigest()
             os.makedirs(f'training_data/{case_id}')
 
             # calculate level for stop loss - TVH
@@ -145,9 +149,6 @@ for ticker in tqdm(TICKERS):
             tvh2 = selected_level - (0.2 * atr) * 0.1
             level_stop2 = selected_level + (0.2 * atr) * 0.9
             take_profit2 = tvh2 - profit_factor * 0.2 * atr
-
-            end_moment = datetime.strptime(date_and_time, "%Y-%m-%d, %H:%M:%S")
-            start_days = end_moment - timedelta(days=100)
 
             df_small_timeframe = get_data(ticker, period='minute', multiplier=5,
                                           start_date=start,
@@ -170,9 +171,9 @@ for ticker in tqdm(TICKERS):
                 end_moment + timedelta(minutes=5),
                 periods=30, freq='5T'
             )
-            date_strings = date_range.strftime('%Y-%m-%d, %H:%M:%S')
+            # date_strings = date_range.strftime('%Y-%m-%d, %H:%M:%S')
 
-            empty_rows = pd.DataFrame(index=date_strings,
+            empty_rows = pd.DataFrame(index=date_range,
                                       columns=df_small_timeframe.columns)
             empty_rows['Open'] = selected_level
             empty_rows['Close'] = selected_level
@@ -181,88 +182,49 @@ for ticker in tqdm(TICKERS):
 
             df_small_timeframe = pd.concat([df_small_timeframe, empty_rows])
 
-            empty_rows = pd.DataFrame(index=range(2), columns=df.columns)
+            date_range = pd.date_range(
+                end_moment + timedelta(days=2),
+                periods=2, freq='1D'
+            )
+            empty_rows = pd.DataFrame(index=date_range, columns=df.columns)
+            empty_rows['Open'] = selected_level
+            empty_rows['Close'] = selected_level
+            empty_rows['Low'] = selected_level
+            empty_rows['High'] = selected_level
             df = pd.concat([df, empty_rows])
 
-            graph = make_subplots(rows=1, cols=1, shared_xaxes=False,
-                                  subplot_titles=[''])
-            graph.update_layout(title="", xaxis_rangeslider_visible=False,
-                                xaxis=dict(showticklabels=False),
-                                paper_bgcolor='white',
-                                plot_bgcolor='white')
+            draw(df, case_id=case_id, custom_ticks=levels_prices, file_name='daily', selected_level=selected_level)
 
-            graph.add_ohlc(x=df.index,
-                           open=df['Open'],
-                           high=df['High'],
-                           low=df['Low'],
-                           close=df['Close'],
-                           decreasing={'line': {'color': 'black', 'width': 4}},
-                           increasing={'line': {'color': 'black', 'width': 4}},
-                           row=1, col=1, showlegend=False)
+            # =---- get hourly data too
 
-            graph.update_xaxes(showticklabels=False, row=1, col=1)
-            graph.update_xaxes(rangeslider={'visible': False}, row=1, col=1)
+            df_hourly = get_data(ticker, period='hour', multiplier=1,
+                                 start_date=end_moment - timedelta(days=3),
+                                 end_date=end_moment,
+                                 save_data=False)
 
-            # Filter daily levels to get rid of duplicates
-            prev_level = 0
-            levels_prices_filtered = []
+            latest_date = df_hourly.index.max().strftime("%Y-%m-%d, %H:%M:%S")
+            start_latest_date = ':'.join(latest_date.split(':')[:-2]) + ':00:00'
+            start_latest_date = datetime.strptime(start_latest_date, "%Y-%m-%d, %H:%M:%S")
 
-            for level in sorted(levels_prices):
-                if abs(prev_level - level) > 0.1 * atr:
-                    levels_prices_filtered.append(level)
+            df_last_hour = get_data(ticker, period='minute', multiplier=5,
+                                    start_date=start_latest_date,
+                                    end_date=end_moment,
+                                    save_data=False)
 
-                prev_level = level
+            # Cut last hourly to hide spoilers
+            df_hourly.iloc[-1]['High'] = df_last_hour['High'].max()
+            df_hourly.iloc[-1]['Low'] = df_last_hour['Low'].min()
+            df_hourly.iloc[-1]['Close'] = df_last_hour.iloc[-1]['Close']
+            df_hourly.iloc[-1]['Open'] = df_last_hour.iloc[0]['Open']
 
-            custom_ticks_daily = [round(level, 2) for level in levels_prices_filtered]
-            custom_tick_text_daily = [str(value) for value in custom_ticks_daily]
-
-            graph.update_layout(
-                yaxis=dict(
-                    tickvals=custom_ticks_daily,
-                    ticktext=custom_tick_text_daily,
-                    showgrid=True,
-                    gridcolor='rgba(0,0,0,0.1)',
-                    tickfont=dict(size=22)
-                ),
-                margin=dict(l=1, r=1, t=1, b=1)
-            )
-
-            for level in custom_ticks_daily:
-                graph.add_shape(type='line', x0=0, x1=len(df), y0=level, y1=level,
-                                line=dict(color='black', width=0.7),
-                                row=1, col=1)
-
-            # Add bold line for selected level
-            graph.add_shape(type='line', x0=0, x1=len(df),
-                            y0=selected_level, y1=selected_level,
-                            line=dict(color='black', width=4),
-                            row=1, col=1)
-
-            pio.write_image(
-                graph, f'training_data/{case_id}/daily.png',
-                height=1000, width=2000
-            )
+            custom_ticks = [
+                round(selected_level, 2),
+                df_hourly['High'].max(),
+                df_hourly['Low'].min(),
+            ]
+            draw(df_hourly, case_id=case_id, custom_ticks=custom_ticks, file_name='hourly', selected_level=selected_level)
 
             # -------
-
-            graph = make_subplots(rows=1, cols=1, shared_xaxes=False,
-                                  subplot_titles=[''])
-            graph.update_layout(title="", xaxis_rangeslider_visible=False,
-                                xaxis=dict(showticklabels=False),
-                                paper_bgcolor='white',
-                                plot_bgcolor='white')
-
-            graph.add_ohlc(x=df_small_timeframe.index,
-                           open=df_small_timeframe['Open'],
-                           high=df_small_timeframe['High'],
-                           low=df_small_timeframe['Low'],
-                           close=df_small_timeframe['Close'],
-                           decreasing={'line': {'color': 'black', 'width': 2}},
-                           increasing={'line': {'color': 'black', 'width': 2}},
-                           row=1, col=1, showlegend=False)
-
-            graph.update_xaxes(showticklabels=False, row=1, col=1)
-            graph.update_xaxes(rangeslider={'visible': False}, row=1, col=1)
 
             custom_ticks = [round(selected_level, 2),
                             round(level_stop, 2),
@@ -273,45 +235,7 @@ for ticker in tqdm(TICKERS):
                             df_small_timeframe['Low'].min(),
                             ]  # Add other default values as needed
 
-            custom_ticks_filtered = []
-            for t in sorted(custom_ticks):
-                if not custom_ticks_filtered or abs(t - custom_ticks_filtered[-1]) > 0.2:
-                    custom_ticks_filtered.append(t)
-
-            custom_tick_text = [str(value) for value in custom_ticks_filtered]
-            graph.update_layout(
-                yaxis=dict(
-                    tickvals=custom_ticks_filtered,
-                    ticktext=custom_tick_text,
-                    showgrid=True,
-                    gridcolor='rgba(0,0,0,0.1)',
-                    tickfont=dict(size=22)
-                ),
-                margin=dict(l=1, r=1, t=1, b=1),
-                autosize=False,
-                width=2000,
-                height=1000,
-            )
-
-            graph.add_shape(type='line', x0=0, x1=len(df_small_timeframe),
-                            y0=selected_level, y1=selected_level,
-                            line=dict(color='black', width=4),
-                            row=1, col=1)
-
-            for level in custom_ticks:
-                graph.add_shape(type='line', x0=0, x1=len(df_small_timeframe),
-                                y0=level, y1=level,
-                                line=dict(color='black', width=1),
-                                row=1, col=1)
-
-            pio.write_image(
-                graph, f'training_data/{case_id}/5_minutes.png',
-                height=1000, width=2000
-            )
-
-            with open(f'training_data/{case_id}/5_minutes.json', 'w+') as f:
-                json.dump(graph, cls=PlotlyJSONEncoder, fp=f)
-
+            draw(df_small_timeframe, case_id=case_id, custom_ticks=custom_ticks, file_name='5_minutes', selected_level=selected_level)
 
             # Save data for the future use
             df.to_csv(f'training_data/{case_id}/daily_before.csv', index=True)
@@ -329,74 +253,23 @@ for ticker in tqdm(TICKERS):
                 f'training_data/{case_id}/5_minutes_after.csv', index=True
             )
 
-            # ---- write image after
+            draw(df_small_timeframe_after, case_id=case_id, custom_ticks=custom_ticks, file_name='5_minutes_after', selected_level=selected_level)
 
-            graph = make_subplots(rows=1, cols=1, shared_xaxes=False,
-                                  subplot_titles=[''])
-            graph.update_layout(title="", xaxis_rangeslider_visible=False,
-                                xaxis=dict(showticklabels=False),
-                                paper_bgcolor='white',
-                                plot_bgcolor='white')
+            # =======
 
-            graph.add_ohlc(x=df_small_timeframe_after.index,
-                           open=df_small_timeframe_after['Open'],
-                           high=df_small_timeframe_after['High'],
-                           low=df_small_timeframe_after['Low'],
-                           close=df_small_timeframe_after['Close'],
-                           decreasing={'line': {'color': 'black', 'width': 2}},
-                           increasing={'line': {'color': 'black', 'width': 2}},
-                           row=1, col=1, showlegend=False)
+            df_short = df_small_timeframe.copy()
+            df_short['candle_size'] = df_short['High'] - df_short['Low']
 
-            graph.update_xaxes(showticklabels=False, row=1, col=1)
-            graph.update_xaxes(rangeslider={'visible': False}, row=1, col=1)
+            medium_candle_size = 0
+            if len(df_short) > 30:
+                # get rid of large and small candles
+                candle_sizes = sorted([s for s in df_short['candle_size'].tolist() if s > 0])[10:-10]
 
-            custom_ticks = [round(selected_level, 2),
-                            round(level_stop, 2),
-                            round(level_stop2, 2),
-                            round(take_profit1, 2),
-                            round(take_profit2, 2),
-                            df_small_timeframe_after['High'].max(),
-                            df_small_timeframe_after['Low'].min(),
-                            ]  # Add other default values as needed
+                if candle_sizes:
+                    medium_candle_size = 1.5 * sum(candle_sizes) / len(candle_sizes)
 
-            custom_ticks_filtered = []
-            for t in sorted(custom_ticks):
-                if not custom_ticks_filtered or abs(t - custom_ticks_filtered[-1]) > 0.2:
-                    custom_ticks_filtered.append(t)
-
-            custom_tick_text = [str(value) for value in custom_ticks_filtered]
-            graph.update_layout(
-                yaxis=dict(
-                    tickvals=custom_ticks_filtered,
-                    ticktext=custom_tick_text,
-                    showgrid=True,
-                    gridcolor='rgba(0,0,0,0.1)',
-                    tickfont=dict(size=22)
-                ),
-                autosize=False,
-                width=2000,
-                height=1000,
-                margin=dict(l=1, r=1, t=1, b=1)
-            )
-
-            graph.add_shape(type='line', x0=0, x1=len(df_small_timeframe_after),
-                            y0=selected_level, y1=selected_level,
-                            line=dict(color='black', width=4),
-                            row=1, col=1)
-
-            for level in custom_ticks:
-                graph.add_shape(type='line', x0=0, x1=len(df_small_timeframe),
-                                y0=level, y1=level,
-                                line=dict(color='black', width=1),
-                                row=1, col=1)
-
-            pio.write_image(
-                graph, f'training_data/{case_id}/5_minutes_after.png',
-                height=1000, width=2000
-            )
-
-            with open(f'training_data/{case_id}/5_minutes_after.json', 'w+') as f:
-                json.dump(graph, cls=PlotlyJSONEncoder, fp=f)
+            if medium_candle_size == 0:
+                medium_candle_size = 1.5 * df_short['candle_size'].mean()
 
             deal = f"""[GLOBAL]
             atr={round(atr, 2)}
@@ -417,6 +290,14 @@ for ticker in tqdm(TICKERS):
             tvh={round(tvh2, 2)}
             stop_loss={round(selected_level + atr * 0.02, 2)}
             take_profit={round(tvh2 - 5 * atr * 0.02, 2)}
+            [DEAL5]
+            tvh={round(tvh2, 2)}
+            stop_loss={round(tvh2 + medium_candle_size, 2)}
+            take_profit={round(tvh2 - 3 * medium_candle_size, 2)}
+            [DEAL6]
+            tvh={round(tvh1, 2)}
+            stop_loss={round(tvh1 - medium_candle_size, 2)}
+            take_profit={round(tvh1 + 3 * medium_candle_size, 2)}
             """
             with open(f'training_data/{case_id}/deal.ini',
                       encoding='utf8', mode='w+') as f:

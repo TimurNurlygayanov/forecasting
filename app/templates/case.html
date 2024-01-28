@@ -12,6 +12,10 @@
 
 <style>
 
+    .card {
+        line-height: 9pt;
+        margin: 20px;
+    }
 
     .card:hover {
         box-shadow: 5px 5px 3px black;
@@ -31,6 +35,7 @@
         border-width: 1px !important;
     }
 
+
 </style>
 
 <body>
@@ -40,34 +45,52 @@
     <div class="container-fluid h-100">
         <div class="row">
 
-            <div class="row col-sm-10">
+            <div class="row col-sm-8">
 
                 <ul class="nav nav-tabs" id="myTab" role="tablist">
                   <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Daily timeframe</button>
                   </li>
                   <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">5 minutes timeframe</button>
+                    <button class="nav-link" id="home2-tab" onclick="hide_deals();" data-bs-toggle="tab" data-bs-target="#home2" type="button" role="tab" aria-controls="home2" aria-selected="false">Hourly timeframe</button>
                   </li>
                   <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="show_result" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">5 minutes timeframe (after)</button>
+                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false"
+                    onclick="hide_deals();">5 minutes timeframe</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="show_result" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false"
+                    onclick="hide_deals();">5 minutes timeframe (after)</button>
                   </li>
                 </ul>
                 <div class="tab-content" id="myTabContent">
                   <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
-                     <img src="{{ daily_timeframe_before }}" width="100%" height="90%">
+                     <div id="plotly-chart_daily" style="width: 100%; height: 100%; max-height: 80vh;"></div>
                   </div>
 
+                    <div class="tab-pane fade" id="home2" role="tabpanel" aria-labelledby="home2-tab">
+                     <div id="plotly-chart_hourly" style="width: 100%; height: 100%; max-height: 80vh;"></div>
+                    </div>
+
                   <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-                      <!--  <img src="{{ short_timeframe_before }}" width="100%" height="90%"> -->
-                      <div id="plotly-chart_5minutes" style="width: 100%; height: 100%"></div>
+                      <div id="plotly-chart_5minutes" style="width: 100%; height: 100%; max-height: 80vh;"></div>
                   </div>
 
                   <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
-                      <!--  <img src="{{ short_timeframe_after }}" width="100%" height="90%"> -->
-                      <div id="plotly-chart_5minutes_after" style="width: 100%; height: 100%"></div>
+                      <div id="plotly-chart_5minutes_after" style="width: 100%; height: 100%; max-height: 80vh;"></div>
                   </div>
                 </div>
+
+
+            </div>
+
+            <div class="col-sm-2">
+
+                <p>Deal Description</p>
+
+                <textarea class="form-control" id="deal_description" rows="15"
+                          style="font-size: 20pt;" required
+                ></textarea>
 
 
             </div>
@@ -79,7 +102,7 @@
 
                     {% for deal in deals %}
 
-                        <div class="card" style="margin: 40px">
+                        <div class="card">
                             <div class="card-body"
                                  onclick="show_result(this, {{ deal['result'] }})"
                                  onmouseover="show_deal(this, {{ deal['tvh'] }}, {{ deal['take_profit'] }}, {{ deal['stop_loss'] }});"
@@ -114,6 +137,13 @@
     function show_result(object, status) {
         if (result_set) { return ""; }
 
+        let deal_description = document.getElementById("deal_description").value;
+
+        //if (deal_description.length < 10) {
+        //    alert("Please set proper description for the deal");
+        //    return "";
+        //}
+
         if (status === -1) {
             object.style = "background-color: red;"
         }
@@ -132,25 +162,37 @@
     // Parse the chart JSON string
     var chartData_5minutes = {{ graph_5minutes | safe }};
     var chartData_5minutes_after = {{ graph_5minutes_after | safe }};
+    var chartData_daily = {{ graph_daily | safe }};
+    var chartData_hourly = {{ graph_hourly | safe }};
     var layoutUpdate = {};
 
-    // Render the chart using Plotly.js
-    Plotly.newPlot('plotly-chart_5minutes', chartData_5minutes.data, chartData_5minutes.layout, {responsive: true});
-
-    Plotly.newPlot('plotly-chart_5minutes_after', chartData_5minutes_after.data, chartData_5minutes_after.layout, {responsive: true});
-
     let levels_5minutes = chartData_5minutes.layout.shapes.slice();
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Render the chart using Plotly.js
+        Plotly.newPlot('plotly-chart_5minutes', chartData_5minutes.data, chartData_5minutes.layout, {responsive: true});
+
+        Plotly.newPlot('plotly-chart_5minutes_after', chartData_5minutes_after.data, chartData_5minutes_after.layout, {responsive: true});
+
+        Plotly.newPlot('plotly-chart_daily', chartData_daily.data, chartData_daily.layout, {responsive: true});
+        Plotly.newPlot('plotly-chart_hourly', chartData_hourly.data, chartData_hourly.layout, {responsive: true});
+
+        hide_deals();
+        setTimeout( function() { hide_deals(); }, 200);
+    });
 
     // Function to add a green rectangle from the 30th x tick to the last x tick
     function show_deal(object, tvh, take_profit, stop_loss) {
         if (result_set) { return ""; }
         hide_deals();
 
-        let xTicks = chartData_5minutes['data'][0]['close'].length - 1;
-        let x_start = chartData_5minutes['data'][0]['x'][xTicks - 29];
-        let x_end = chartData_5minutes['data'][0]['x'][xTicks];
+        let x_ticks_strings = chartData_5minutes_after['data'][0]['x'].sort();
+        let xTicks = chartData_5minutes_after['data'][0]['x'].length-1;
+        let x_start = x_ticks_strings[xTicks-29];
+        let x_end = x_ticks_strings[xTicks];
 
         // layoutUpdate.shapes
+        layoutUpdate.layout = {};
         layoutUpdate.shapes = levels_5minutes.slice();
         layoutUpdate.shapes.push(
             {
@@ -178,7 +220,6 @@
                 layer: 'above', // Draw the rectangle below the plot
             },
         );
-
         // Update the layout to include the green rectangle
         Plotly.update('plotly-chart_5minutes', {}, layoutUpdate);
         Plotly.update('plotly-chart_5minutes_after', {}, layoutUpdate);
@@ -189,6 +230,12 @@
         // Update the layout to remove the green rectangle
         Plotly.update('plotly-chart_5minutes', {}, chartData_5minutes.layout);
         Plotly.update('plotly-chart_5minutes_after', {}, chartData_5minutes_after.layout);
+
+        Plotly.update('plotly-chart_daily', {}, chartData_daily.layout);
+        Plotly.update('plotly-chart_hourly', {}, chartData_hourly.layout);
+
+        //chartData_5minutes.layout.autosize = true;
+        //chartData_5minutes_after.layout.autosize = true;
     }
 
 

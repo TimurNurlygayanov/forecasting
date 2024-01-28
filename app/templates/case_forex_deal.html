@@ -1,0 +1,363 @@
+<html>
+
+<head>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <title>{{ ticker }}</title>
+
+</head>
+
+<style>
+
+    .card {
+        line-height: 9pt;
+        margin: 20px;
+    }
+
+    .card:hover {
+        box-shadow: 5px 5px 3px black;
+        border-width: 3px;
+        transform: scale(1.2);
+    }
+
+    .selected_card {
+        box-shadow: 5px 5px 3px black !important;
+        border-width: 3px !important;
+        transform: scale(1.2) !important;
+    }
+
+    .disabled_card {
+        box-shadow: none !important;
+        transform: scale(1.0) !important;
+        border-width: 1px !important;
+    }
+
+    .widget {
+        width: 80%; margin: 20px;
+    }
+
+
+</style>
+
+<body>
+
+    <p>&nbsp; &nbsp; <a href="/forex" style="margin-top: 10px;"> < Go Back</a></p>
+
+    <div class="container-fluid h-100">
+        <div class="row">
+
+            <div class="row col-sm-8">
+
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Daily timeframe</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="home2-tab" onclick="hide_deals();" data-bs-toggle="tab" data-bs-target="#home2" type="button" role="tab" aria-controls="home2" aria-selected="false">Hourly timeframe</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false"
+                    onclick="hide_deals();">15 minutes timeframe</button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="profile-tab2" data-bs-toggle="tab" data-bs-target="#profile2" type="button" role="tab" aria-controls="profile2" aria-selected="false"
+                    onclick="hide_deals();">15 minutes levels</button>
+                  </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                     <div id="plotly-chart_daily" style="width: 100%; height: 100%; max-height: 80vh;"></div>
+                    </div>
+
+                    <div class="tab-pane fade" id="home2" role="tabpanel" aria-labelledby="home2-tab">
+                     <div id="plotly-chart_hourly" style="width: 100%; height: 100%; max-height: 80vh;"></div>
+                    </div>
+
+                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                      <div id="plotly-chart_15minutes" style="width: 100%; height: 100%; max-height: 80vh;"></div>
+                    </div>
+                    <div class="tab-pane fade" id="profile2" role="tabpanel" aria-labelledby="profile-tab2">
+                      <div id="plotly-chart_15minutes_levels" style="width: 100%; height: 100%; max-height: 80vh;"></div>
+                    </div>
+                </div>
+
+
+            </div>
+
+            <div class="col-sm-2">
+
+                <p>Deal Description</p>
+
+                <textarea class="form-control" id="deal_description" rows="20"
+                          style="font-size: 15pt;" required
+                ></textarea>
+
+
+            </div>
+
+            <div class="col-sm-2">
+
+                <div style="border-radius: 20px; border-width: 2px;
+                width: 100%; height: 100%; border-style: dashed; text-align: center">
+
+                    <div class="form-group widget">
+                        <label for="lot_size">Risk Size</label>
+                        <select class="form-control widget" id="lot_size">
+                          <option value="0.01">0.01</option>
+                          <option value="0.1">0.1</option>
+                          <option value="1">1</option>
+                        </select>
+                    </div>
+
+                    {% for deal in deals %}
+
+                        <div class="card">
+                            <div class="card-body"
+                                 onclick="send_order({{ deal['tvh'] }}, {{ deal['stop_loss'] }}, {{ deal['take_profit'] }}); "
+                                 onmouseover="show_deal(this, {{ deal['tvh'] }}, {{ deal['take_profit'] }}, {{ deal['stop_loss'] }});"
+                            >
+                                {{ deal['html'] | safe }}
+
+                            </div>
+                        </div>
+
+
+                    {% endfor %}
+
+                    <button type="button" class="btn btn-warning widget">Skip</button>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+</body>
+
+<script>
+
+    let result_set = false;
+
+    // Parse the chart JSON string
+    let chartData_15minutes = {{ graph_15minutes | safe }};
+    let chartData_15minutes_levels = {{ graph_15minutes_levels | safe }};
+    let chartData_daily = {{ graph_daily | safe }};
+    let chartData_hourly = {{ graph_hourly | safe }};
+    let layoutUpdate = {};
+
+    let levels_15minutes = chartData_15minutes.layout.shapes.slice();
+    let levels_15minutes_levels = chartData_15minutes_levels.layout.shapes.slice();
+    let levels_daily = chartData_daily.layout.shapes.slice();
+    let levels_hourly = chartData_hourly.layout.shapes.slice();
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Render the chart using Plotly.js
+        Plotly.newPlot('plotly-chart_15minutes', chartData_15minutes.data, chartData_15minutes.layout, {responsive: true});
+        Plotly.newPlot('plotly-chart_15minutes_levels', chartData_15minutes_levels.data, chartData_15minutes_levels.layout, {responsive: true});
+
+        Plotly.newPlot('plotly-chart_daily', chartData_daily.data, chartData_daily.layout, {responsive: true});
+        Plotly.newPlot('plotly-chart_hourly', chartData_hourly.data, chartData_hourly.layout, {responsive: true});
+
+        hide_deals();
+        setTimeout( function() { hide_deals(); }, 200);
+    });
+
+    // Function to add a green rectangle from the 30th x tick to the last x tick
+    function show_deal(object, tvh, take_profit, stop_loss) {
+        if (result_set) { return ""; }
+        hide_deals();
+
+        let x_ticks_strings = chartData_15minutes['data'][0]['x'].sort();
+        let xTicks = chartData_15minutes['data'][0]['x'].length-1;
+        let x_start = x_ticks_strings[xTicks-29];
+        let x_end = x_ticks_strings[xTicks];
+
+        let x_ticks_strings_daily = chartData_daily['data'][0]['x'].sort();
+        let xTicks_daily = chartData_daily['data'][0]['x'].length-1;
+
+        let x_ticks_strings_original = chartData_15minutes_levels['data'][0]['x'].sort();
+        let xTicks_original = chartData_15minutes_levels['data'][0]['x'].length-1;
+
+        layoutUpdate.layout = {};
+        layoutUpdate.shapes = levels_15minutes_levels.slice();
+        layoutUpdate.shapes.push(
+            {
+                type: 'rect',
+                xref: 'x',
+                yref: 'y', // Relative to the plotting area
+                x0: x_ticks_strings_original[xTicks_original-29],       // Start at the 30th x tick
+                x1: x_ticks_strings_original[xTicks_original],  // Extend to the end of the x axis
+                y0: tvh,
+                y1: take_profit,
+                fillcolor: 'green',
+                opacity: 0.3,
+                layer: 'above', // Draw the rectangle below the plot
+            },
+            {
+                type: 'rect',
+                xref: 'x',
+                yref: 'y', // Relative to the plotting area
+                x0: x_ticks_strings_original[xTicks_original-29],       // Start at the 30th x tick
+                x1: x_ticks_strings_original[xTicks_original],  // Extend to the end of the x axis
+                y0: tvh,
+                y1: stop_loss,
+                fillcolor: 'red',
+                opacity: 0.3,
+                layer: 'above', // Draw the rectangle below the plot
+            },
+        );
+        // Update the layout to include the green rectangle
+        Plotly.update('plotly-chart_15minutes_levels', {}, layoutUpdate);
+
+
+        // -------------------
+
+        layoutUpdate.layout = {};
+        layoutUpdate.shapes = levels_15minutes.slice();
+        layoutUpdate.shapes.push(
+            {
+                type: 'rect',
+                xref: 'x',
+                yref: 'y', // Relative to the plotting area
+                x0: x_start,       // Start at the 30th x tick
+                x1: x_end,  // Extend to the end of the x axis
+                y0: tvh,
+                y1: take_profit,
+                fillcolor: 'green',
+                opacity: 0.3,
+                layer: 'above', // Draw the rectangle below the plot
+            },
+            {
+                type: 'rect',
+                xref: 'x',
+                yref: 'y', // Relative to the plotting area
+                x0: x_start,       // Start at the 30th x tick
+                x1: x_end,  // Extend to the end of the x axis
+                y0: tvh,
+                y1: stop_loss,
+                fillcolor: 'red',
+                opacity: 0.3,
+                layer: 'above', // Draw the rectangle below the plot
+            },
+        );
+        // Update the layout to include the green rectangle
+        Plotly.update('plotly-chart_15minutes', {}, layoutUpdate);
+
+
+        // -------------------
+
+        layoutUpdate.shapes = levels_daily.slice();
+        layoutUpdate.shapes.push(
+            {
+                type: 'rect',
+                xref: 'x',
+                yref: 'y', // Relative to the plotting area
+                x0: x_ticks_strings_daily[xTicks_daily-3],       // Start at the 30th x tick
+                x1: x_ticks_strings_daily[xTicks_daily],  // Extend to the end of the x axis
+                y0: tvh,
+                y1: take_profit,
+                fillcolor: 'green',
+                opacity: 0.3,
+                layer: 'above', // Draw the rectangle below the plot
+            },
+            {
+                type: 'rect',
+                xref: 'x',
+                yref: 'y', // Relative to the plotting area
+                x0: x_ticks_strings_daily[xTicks_daily-3],       // Start at the 30th x tick
+                x1: x_ticks_strings_daily[xTicks_daily],  // Extend to the end of the x axis
+                y0: tvh,
+                y1: stop_loss,
+                fillcolor: 'red',
+                opacity: 0.3,
+                layer: 'above', // Draw the rectangle below the plot
+            },
+        );
+
+        Plotly.update('plotly-chart_daily', {}, layoutUpdate);
+
+
+        let x_ticks_strings_hourly = chartData_hourly['data'][0]['x'].sort();
+        let xTicks_hourly = chartData_hourly['data'][0]['x'].length-1;
+
+        layoutUpdate.shapes = levels_hourly.slice();
+        layoutUpdate.shapes.push(
+            {
+                type: 'rect',
+                xref: 'x',
+                yref: 'y', // Relative to the plotting area
+                x0: x_ticks_strings_hourly[xTicks_hourly-3],       // Start at the 30th x tick
+                x1: x_ticks_strings_hourly[xTicks_hourly],  // Extend to the end of the x axis
+                y0: tvh,
+                y1: take_profit,
+                fillcolor: 'green',
+                opacity: 0.3,
+                layer: 'above', // Draw the rectangle below the plot
+            },
+            {
+                type: 'rect',
+                xref: 'x',
+                yref: 'y', // Relative to the plotting area
+                x0: x_ticks_strings_hourly[xTicks_hourly-3],       // Start at the 30th x tick
+                x1: x_ticks_strings_hourly[xTicks_hourly],  // Extend to the end of the x axis
+                y0: tvh,
+                y1: stop_loss,
+                fillcolor: 'red',
+                opacity: 0.3,
+                layer: 'above', // Draw the rectangle below the plot
+            },
+        );
+
+        Plotly.update('plotly-chart_hourly', {}, layoutUpdate);
+    }
+
+    // Function to remove the green rectangle
+    function hide_deals() {
+        // Update the layout to remove the green rectangle
+        Plotly.update('plotly-chart_15minutes', {}, chartData_15minutes.layout);
+
+        Plotly.update('plotly-chart_15minutes_levels', {}, chartData_15minutes_levels.layout);
+
+        Plotly.update('plotly-chart_daily', {}, chartData_daily.layout);
+        Plotly.update('plotly-chart_hourly', {}, chartData_hourly.layout);
+    }
+</script>
+
+<script>
+
+    function send_order(open_price, stop_loss, take_profit) {
+        let description = document.getElementById("deal_description").value;
+        let lot_size = document.getElementById("lot_size").value;
+
+        fetch("/send_order", {
+          method: "POST",
+          body: JSON.stringify({
+              ticker: "{{ ticker}}",
+              open_price: open_price,
+              stop_loss: stop_loss,
+              take_profit: take_profit,
+              comment: description,
+              lot_size: lot_size
+          }),
+          headers: {
+            "Content-type": "application/json; charset=UTF-8"
+          }
+        })
+          .then((response) => response.json())
+          .then((json) => console.log(json));
+    }
+
+
+</script>
+
+
+
+</html>

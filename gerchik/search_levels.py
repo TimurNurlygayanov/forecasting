@@ -59,9 +59,9 @@ for ticker in tqdm(TICKERS):
     highs = df['High'].tolist()
 
     df['min'] = df.iloc[argrelextrema(df.Low.values, np.less_equal,
-                                      order=20)[0]]['Open']
+                                      order=10)[0]]['Open']
     df['max'] = df.iloc[argrelextrema(df.High.values, np.greater_equal,
-                                      order=20)[0]]['Close']
+                                      order=10)[0]]['Close']
 
     mins = [a for a in df['min'].tolist() if a > 0]
     maxs = [a for a in df['max'].tolist() if a > 0]

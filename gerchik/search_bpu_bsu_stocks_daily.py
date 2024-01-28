@@ -60,7 +60,7 @@ def search_for_bsu(lows, highs, bsu_price, luft):
 def run_me(ticker):
     global RESULTS
 
-    df = get_data(ticker, period='day', days=200)
+    df = get_data(ticker, period='day', days=200, save_data=False)
 
     if df is None or df.empty or len(df) < 50:
         return None
@@ -109,8 +109,9 @@ def run_me(ticker):
                 stop_price = order_price + stop_loss
 
     if found_signal:
+        print(f'{ticker} limit order: {order_price:.2f}, stop: {stop_price:.2f}')
         RESULTS.append(f'{ticker} limit order: {order_price:.2f}, stop: {stop_price:.2f}')
-        print(len(RESULTS), RESULTS)
+        # print(len(RESULTS), RESULTS)
 
 
 Parallel(n_jobs=-1, require='sharedmem', timeout=20)(delayed(run_me)(ticker) for ticker in TICKERS)

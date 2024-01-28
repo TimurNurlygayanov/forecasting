@@ -143,6 +143,8 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
                 data['volume'].append(a.volume)
 
             df = pd.DataFrame(data, index=indexes)
+            df.sort_index(inplace=True)
+            df.index = pd.to_datetime(df.index)
 
             if save_data:
                 df.to_excel(file_name, index=True, header=True)
