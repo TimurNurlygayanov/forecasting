@@ -3,6 +3,8 @@ from bot.utils import get_data
 from bot.utils import get_tickers_polygon
 
 from joblib import Parallel, delayed
+from utils import draw
+
 
 
 TICKERS = get_tickers_polygon(limit=5000)  # 2000
@@ -55,6 +57,42 @@ def search_for_bsu(lows, highs, bsu_price, luft):
             return True
 
     return False
+
+
+def check_dozhatie(df):
+    lows = df['Low'].tolist()
+    highs = df['High'].tolist()
+    opens = df['Open'].tolist()
+    closes = df['Close'].tolist()
+    s1 = highs[-1] - lows[-1]
+    s2 = highs[-2] - lows[-2]
+    s3 = highs[-3] - lows[-3]
+
+    delta = 0.02
+
+    if s1 < s2 < s3:   # volatilnost padaet
+        if lows[-1] > lows[-2] > lows[-3]:
+            if opens[-1] < closes[-1]:
+                # Check for the confirmation
+                k = 0
+                for high in highs[-10:-1]:
+                    if abs(high - highs[-1]) <= delta:
+                        k += 1
+
+                if k >= 1:
+                    return highs[-1]  # draw(df, file_name=ticker, ticker=ticker, level=highs[-1])
+
+        if highs[-1] < highs[-2] < highs[-3]:
+            if opens[-1] > closes[-1]:
+                k = 0
+                for low in lows[-10:-1]:
+                    if abs(low - lows[-1]) <= delta:
+                        k += 1
+
+                if k >= 1:
+                    return lows[-1]  # draw(df, file_name=ticker, ticker=ticker, level=lows[-1])
+
+    return 0
 
 
 def run_me(ticker):
@@ -122,7 +160,6 @@ def run_me(ticker):
     if abs(lows[-1] - lows[-2]) < 0.02 or abs(lows[-1] - lows[-3]) < 0.02 or abs(lows[-1] - lows[-4]) < 0.02:
         levels.append(lows[-1])
 
-    """
     #  limit + mirror levels search
 
     prices = sorted(highs + lows)
@@ -143,18 +180,6 @@ def run_me(ticker):
             group = []
 
         previous_price = p
-
-    # Try to find podzatie
-
-    medium = sum(lows[-3:]) / 3
-    diff = sum([1 for k in lows[-7:] if abs(k-medium) < 2*luft])
-    if diff >= 3:
-        levels.append(lows[-1])
-
-    medium = sum(highs[-3:]) / 3
-    diff = sum([1 for k in highs[-7:] if abs(k - medium) < 2*luft])
-    if diff >= 3:
-        levels.append(highs[-1])
 
     # izlom trenda search
 
@@ -188,7 +213,10 @@ def run_me(ticker):
             if e < 3:
                 levels.append(max_high)
 
-    """
+    level = check_dozhatie(df)
+    if level > 0:
+        levels.append(level)
+
     # Choosing the right level:
 
     selected_level = 0
@@ -201,7 +229,8 @@ def run_me(ticker):
         print(f'{ticker} level {selected_level}')
 
         RESULTS.append(f'{ticker} level {selected_level}')
-        # print(len(RESULTS), RESULTS)
+
+        draw(df, file_name=ticker, ticker=ticker, level=selected_level)
 
 
 print('Starting threads...')
