@@ -29,7 +29,7 @@ TICKERS = get_tickers_polygon(limit=5000)  # 2000
 new_matrix = []
 latest_state = {}
 results = []
-step_size = 3  # make sure we do not use similar data for training and verification
+step_size = 2  # make sure we do not use similar data for training and verification
 max_days = 600
 risk_reward_ratio = 3
 
@@ -46,7 +46,7 @@ for ticker in tqdm(TICKERS):
         continue
 
     current_price = df['Close'].tolist()[-1]
-    if current_price < 1:
+    if current_price < 10:
         continue  # ignore penny stocks and huge stocks
 
     atr = calculate_atr(df)
@@ -67,7 +67,7 @@ for ticker in tqdm(TICKERS):
 
             # we only check for long positions with risk reward ratio = 1:5
             buy_price = row['Close']
-            stop_loss = row['EMA21_low']
+            stop_loss = row['Low'] - abs(row['Close'] - row['Low']) # row['EMA21_low']
             take_profit = row['Close'] + risk_reward_ratio * abs(row['Close'] - row['EMA21_low'])
 
             deal_is_done = False
