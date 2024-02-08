@@ -149,10 +149,12 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
             if save_data:
                 df.to_excel(file_name, index=True, header=True)
 
-        """
-        df.ta.cdl_pattern(append=True, name=["doji", "morningstar", "hammer", "engulfing", "shootingstar"])
+        # df.ta.cdl_pattern(append=True, name=["doji", "morningstar", "hammer", "engulfing", "shootingstar"])
 
+        df.ta.ema(close='Low', length=21, append=True, col_names=('EMA21_low',))
+        df.ta.ema(close='Low', length=9, append=True, col_names=('EMA9_low',))
         df.ta.ema(length=7, append=True, col_names=('EMA7',))
+        df.ta.ema(length=21, append=True, col_names=('EMA21',))
         df.ta.ema(length=50, append=True, col_names=('EMA50',))
         df.ta.ema(length=200, append=True, col_names=('EMA200',))
         df.ta.supertrend(append=True, length=10, multiplier=3.0,
@@ -164,7 +166,6 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
         df.ta.bbands(col_names=('L', 'M', 'U', 'B', 'P'), append=True)
 
         df.ta.atr(append=True, col_names=('ATR',))
-        """
     except Exception as e:
         print(f'No data for {ticker} {e}')
 
@@ -244,9 +245,9 @@ def is_engulfing_bullish(open1, open2, close1, close2):
     return 0
 
 
-def get_state(df, dfHA, i: int = 0, step_size: int = 10):
+def get_state(df, i: int = 0, step_size: int = 10):   # dfHA, ,
     state = [0] * 76
-    row = df.iloc[i]
+    row = df.iloc[i].copy()
 
     #
     state[0] = 1 if row['Low'] > row['EMA200'] and df['Low'].values[i - 1] < df['EMA200'].values[i - 1] else 0
@@ -304,13 +305,13 @@ def get_state(df, dfHA, i: int = 0, step_size: int = 10):
     state[21] = 1 if row['Close'] > row['EMA50'] else 0
 
     # lower low and higher high
-    state[22] = 1 if row['Low'] < min(df['Low'].values[i - 10:i - 1]) else 0
-    state[23] = 1 if row['Low'] < min(df['Low'].values[i - 50:i - 1]) else 0
-    state[24] = 1 if row['Low'] < min(df['Low'].values[i - 200:i - 1]) else 0
+    state[22] = 1 if row['Low'] <= min(df['Low'].values[i - 10:i - 1]) else 0
+    state[23] = 1 if row['Low'] <= min(df['Low'].values[i - 50:i - 1]) else 0
+    state[24] = 1 if row['Low'] <= min(df['Low'].values[i - 200:i - 1]) else 0
 
-    state[25] = 1 if row['High'] > max(df['High'].values[i - 10:i - 1]) else 0
-    state[26] = 1 if row['High'] > max(df['High'].values[i - 50:i - 1]) else 0
-    state[27] = 1 if row['High'] > max(df['High'].values[i - 200:i - 1]) else 0
+    state[25] = 1 if row['High'] >= max(df['High'].values[i - 10:i - 1]) else 0
+    state[26] = 1 if row['High'] >= max(df['High'].values[i - 50:i - 1]) else 0
+    state[27] = 1 if row['High'] >= max(df['High'].values[i - 200:i - 1]) else 0
 
     # if price higher that EMA for long time? - EMA 50
     higher_price = True
@@ -359,12 +360,25 @@ def get_state(df, dfHA, i: int = 0, step_size: int = 10):
     state[47] = 1 if row['S_trend_d34'] > 0 else 0
     state[48] = 1 if row['S_trend_d34'] > 0 > df['S_trend_d34'].values[i - 1] else 0
 
+    """
     state[49] = 1 if row['CDL_DOJI_10_0.1'] > 0 else 0
     state[50] = 1 if row['CDL_MORNINGSTAR'] > 0 else 0
     state[51] = 1 if row['CDL_HAMMER'] > 0 else 0
     state[52] = 1 if row['CDL_SHOOTINGSTAR'] > 0 else 0
     state[53] = 1 if row['CDL_ENGULFING'] > 0 else 0
     state[54] = 1 if row['CDL_ENGULFING'] < 0 else 0
+    """
+
+    ######
+
+    state[49] = 1 if row['Close'] > row['EMA21_low'] > row['Open'] else 0
+    state[50] = 1 if row['Close'] > row['EMA21_low'] > row['Low'] else 0
+    state[51] = 1 if row['Close'] > row['EMA21_low'] and row['RSI'] > 50 else 0
+    state[52] = 1 if row['Close'] > row['EMA21_low'] and row['RSI'] > 50 > df['RSI'].values[i - 1] else 0
+    state[53] = 1 if row['Close'] > row['EMA9_low'] and row['RSI'] > 50 else 0
+    state[54] = 1 if row['Close'] > row['EMA9_low'] and row['RSI'] > 50 > df['RSI'].values[i - 1] else 0
+
+    ######
 
     if df['EMA50'].values[i] > df['EMA200'].values[i]:
         if df['EMA50'].values[i - 1] < df['EMA200'].values[i - 1]:
@@ -378,8 +392,9 @@ def get_state(df, dfHA, i: int = 0, step_size: int = 10):
 
     state[57] = 1 if delta > 0.01 else 0
     state[58] = 1 if delta > 0.02 else 0
-    state[59] = 1 if delta > 0.5 else 0
+    state[59] = 1 if delta > 0.05 else 0
 
+    """
     if dfHA['Open'].values[i] < dfHA['Close'].values[i]:
         state[60] = 1
     if dfHA['Open'].values[i-1] < dfHA['Close'].values[i-1]:
@@ -399,6 +414,7 @@ def get_state(df, dfHA, i: int = 0, step_size: int = 10):
         state[66] = 1
     if dfHA['Open'].values[i] < df['EMA50'].values[i] < dfHA['Close'].values[i]:
         state[67] = 1
+    """
 
     if df['EMA21'].values[i] > df['EMA21'].values[i-1]:
         state[68] = 1
