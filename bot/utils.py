@@ -246,7 +246,7 @@ def is_engulfing_bullish(open1, open2, close1, close2):
 
 
 def get_state(df, i: int = 0, step_size: int = 10):   # dfHA, ,
-    state = [0] * 76
+    state = [0] * 103
     row = df.iloc[i].copy()
 
     #
@@ -360,15 +360,6 @@ def get_state(df, i: int = 0, step_size: int = 10):   # dfHA, ,
     state[47] = 1 if row['S_trend_d34'] > 0 else 0
     state[48] = 1 if row['S_trend_d34'] > 0 > df['S_trend_d34'].values[i - 1] else 0
 
-    """
-    state[49] = 1 if row['CDL_DOJI_10_0.1'] > 0 else 0
-    state[50] = 1 if row['CDL_MORNINGSTAR'] > 0 else 0
-    state[51] = 1 if row['CDL_HAMMER'] > 0 else 0
-    state[52] = 1 if row['CDL_SHOOTINGSTAR'] > 0 else 0
-    state[53] = 1 if row['CDL_ENGULFING'] > 0 else 0
-    state[54] = 1 if row['CDL_ENGULFING'] < 0 else 0
-    """
-
     ######
 
     state[49] = 1 if row['Close'] > row['EMA21_low'] > row['Open'] else 0
@@ -394,45 +385,49 @@ def get_state(df, i: int = 0, step_size: int = 10):   # dfHA, ,
     state[58] = 1 if delta > 0.02 else 0
     state[59] = 1 if delta > 0.05 else 0
 
-    """
-    if dfHA['Open'].values[i] < dfHA['Close'].values[i]:
-        state[60] = 1
-    if dfHA['Open'].values[i-1] < dfHA['Close'].values[i-1]:
-        state[61] = 1
-    if dfHA['Open'].values[i-2] < dfHA['Close'].values[i-2]:
-        state[62] = 1
+    #
 
-    if state[60] == state[61] == state[62]:
-        state[63] = 1
+    state[60] = 1 if row['Close'] > row['EMA9_low'] else 0
+    state[61] = 1 if row['Close'] > row['EMA21_low'] else 0
+    state[62] = 1 if row['Close'] > row['EMA21'] else 0
+    state[63] = 1 if row['Close'] > row['EMA7'] else 0
 
-    if dfHA['Open'].values[i] > df['EMA21'].values[i] > dfHA['Close'].values[i]:
-        state[64] = 1
-    if dfHA['Open'].values[i] < df['EMA21'].values[i] < dfHA['Close'].values[i]:
-        state[65] = 1
-
-    if dfHA['Open'].values[i] > df['EMA50'].values[i] > dfHA['Close'].values[i]:
-        state[66] = 1
-    if dfHA['Open'].values[i] < df['EMA50'].values[i] < dfHA['Close'].values[i]:
-        state[67] = 1
-    """
+    # Padaet volatilnost
+    s1 = df['High'].values[i] - df['Low'].values[i]
+    s2 = df['High'].values[i-1] - df['Low'].values[i-1]
+    s3 = df['High'].values[i-2] - df['Low'].values[i-2]
+    state[64] = 1 if s1 < s2 < s3 else 0
+    #
 
     if df['EMA21'].values[i] > df['EMA21'].values[i-1]:
-        state[68] = 1
+        state[65] = 1
     if df['EMA50'].values[i] > df['EMA50'].values[i-1]:
-        state[69] = 1
+        state[66] = 1
     if df['EMA7'].values[i] > df['EMA7'].values[i-1]:
-        state[70] = 1
+        state[67] = 1
     if df['RSI'].values[i] > df['RSI'].values[i-1]:
-        state[71] = 1
+        state[68] = 1
 
     if df['Low'].values[i] > df['Low'].values[i-1]:
-        state[72] = 1
+        state[69] = 1
     if df['High'].values[i] > df['High'].values[i-1]:
-        state[73] = 1
+        state[70] = 1
     if df['Low'].values[i] > df['Low'].values[i-2]:
-        state[74] = 1
+        state[71] = 1
     if df['High'].values[i] > df['High'].values[i-2]:
-        state[75] = 1
+        state[72] = 1
+
+    # Add info about recent price movements
+    m_high = max(df['High'].values[i-10:i+1])
+    m_low = min(df['Low'].values[i-10:i+1])
+    new_max = m_high - m_low
+    for k in range(0, 10):
+        # 73-82
+        state[73 + k] = (df['Close'].values[i-k] - m_low) / new_max
+        # 83-93
+        state[83 + k] = (df['Low'].values[i - k] - m_low) / new_max
+        # 93-103
+        state[93 + k] = (df['High'].values[i - k] - m_low) / new_max
 
     return state
 

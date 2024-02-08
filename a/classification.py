@@ -5,6 +5,9 @@
 # F1-score: 0.021
 # ROC AUC: 0.505
 
+import warnings
+warnings.filterwarnings("ignore")
+
 from bot.utils import get_data
 from bot.utils import get_tickers_polygon
 from bot.utils import get_state
@@ -24,16 +27,15 @@ from gerchik.utils import check_for_bad_candles
 
 
 TICKERS = get_tickers_polygon(limit=5000)  # 2000
-# TICKERS = get_tickers()  # ONLY S&P500
 
 new_matrix = []
 latest_state = {}
 results = []
-step_size = 2  # make sure we do not use similar data for training and verification
+step_size = 5  # make sure we do not use similar data for training and verification
 max_days = 600
-risk_reward_ratio = 3
+risk_reward_ratio = 5
 
-TICKERS = TICKERS[:100]
+TICKERS = TICKERS[:500]
 
 for ticker in tqdm(TICKERS):
     df = get_data(ticker, period='day', days=max_days)
@@ -67,11 +69,11 @@ for ticker in tqdm(TICKERS):
 
             # we only check for long positions with risk reward ratio = 1:5
             buy_price = row['Close']
-            stop_loss = row['Low'] - abs(row['Close'] - row['Low']) # row['EMA21_low']
-            take_profit = row['Close'] + risk_reward_ratio * abs(row['Close'] - row['EMA21_low'])
+            stop_loss = row['Low'] - abs(row['Close'] - row['Low'])  #  0.98 * row['Close']  #  row['EMA21_low']  #  row['Low'] - abs(row['Close'] - row['Low'])  #  row['EMA21_low'])
+            take_profit = buy_price + risk_reward_ratio * abs(buy_price - stop_loss)
 
             deal_is_done = False
-            for j in range(i+1, min(len(df)-1, i + 50)):
+            for j in range(i+1, min(len(df)-1, i + 10)):
                 if not deal_is_done:
                     if df['Low'].values[j] <= stop_loss:
                         result = 0
@@ -90,7 +92,7 @@ for ticker in tqdm(TICKERS):
 def evaluate_model(model_x, X_test, y_test):
     # y_pred = model_x.predict(X_test)
     y_pred_proba = model.predict_proba(X_test)[:, 1]
-    y_pred = (y_pred_proba >= 0.5).astype(int)      # 0.9 >  this increases precision from 0.28 to 0.33
+    y_pred = (y_pred_proba >= 0.5).astype(int)      # 0.9 >  increase this to increase precision for good bets
 
     try:
         accuracy = accuracy_score(y_test, y_pred)
@@ -126,20 +128,23 @@ print(f'POSITIVE CASES: {sum(results)}')
 model = CatBoostClassifier(
     iterations=1000, depth=10, thread_count=7,
     learning_rate=0.1, loss_function='Logloss',
-    class_weights=[1, 1.2]
+    class_weights=[1, 1]   # this one helps to increase Recoll for the white dots
 )
 X_train, X_test, y_train, y_test = train_test_split(new_matrix, results, test_size=0.1, random_state=42)
 
 print(f'Positive options in train dataset: {sum(y_train)} / {len(X_train)}')
 print(f'Positive options in evaluation dataset: {sum(y_test)} / {len(X_test)}')
 
+# z = sum([1 for x in X_train if X_train.count(x) > 1])
+# print(f'Total non unique values {z}')
+
 smote = SMOTE(random_state=42)
 X_train_balanced, y_train_balanced = smote.fit_resample(X_train, y_train)
+# X_train_balanced, y_train_balanced = X_train, y_train
 
 print(f'Positive options in balanced train dataset: {sum(y_train_balanced)} / {len(X_train_balanced)}')
 
-# sample_weights = [1 if y == 1 else 0.9 for y in y_train]
-model.fit(X_train_balanced, y_train_balanced, eval_set=(X_test, y_test), verbose=False)  # sample_weight=sample_weights
+model.fit(X_train_balanced, y_train_balanced, eval_set=(X_test, y_test), verbose=False)
 
 evaluate_model(model, X_test, y_test)
 
