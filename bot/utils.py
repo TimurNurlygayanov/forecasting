@@ -165,6 +165,8 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
         df.ta.macd(append=True, col_names=('MACD', 'MACD_hist', 'MACD_signal'))
         df.ta.bbands(col_names=('L', 'M', 'U', 'B', 'P'), append=True)
 
+        df.ta.obv(append=True, col_names=('OBV',))
+
         df.ta.atr(append=True, col_names=('ATR',))
     except Exception as e:
         print(f'No data for {ticker} {e}')
@@ -246,7 +248,7 @@ def is_engulfing_bullish(open1, open2, close1, close2):
 
 
 def get_state(df, i: int = 0, step_size: int = 10):   # dfHA, ,
-    state = [0] * 103
+    state = [0] * 123
     row = df.iloc[i].copy()
 
     #
@@ -420,6 +422,10 @@ def get_state(df, i: int = 0, step_size: int = 10):   # dfHA, ,
     # Add info about recent price movements
     m_high = max(df['High'].values[i-10:i+1])
     m_low = min(df['Low'].values[i-10:i+1])
+    min_obv = min(df['OBV'].values[i-10:i+1])
+    min_atr = min(df['ATR'].values[i-10:i+1])
+    max_obv = max(df['OBV'].values[i - 10:i + 1])
+    max_atr = max(df['ATR'].values[i - 10:i + 1])
     new_max = m_high - m_low
     for k in range(0, 10):
         # 73-82
@@ -428,6 +434,10 @@ def get_state(df, i: int = 0, step_size: int = 10):   # dfHA, ,
         state[83 + k] = (df['Low'].values[i - k] - m_low) / new_max
         # 93-103
         state[93 + k] = (df['High'].values[i - k] - m_low) / new_max
+        # 103-113
+        state[103 + k] = (df['OBV'].values[i - k] - min_obv) / (max_obv - min_obv)
+        # 113-123
+        state[113 + k] = (df['ATR'].values[i - k] - min_obv) / (max_obv - min_obv)
 
     return state
 

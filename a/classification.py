@@ -22,6 +22,8 @@ from catboost import CatBoostClassifier
 
 from tqdm import tqdm
 
+from sklearn.cluster import KMeans
+
 from gerchik.utils import calculate_atr
 from gerchik.utils import check_for_bad_candles
 
@@ -31,13 +33,14 @@ TICKERS = get_tickers_polygon(limit=5000)  # 2000
 new_matrix = []
 latest_state = {}
 results = []
-step_size = 5  # make sure we do not use similar data for training and verification
-max_days = 600
+step_size = 2  # make sure we do not use similar data for training and verification
+max_days = 1000
 risk_reward_ratio = 5
 
-TICKERS = TICKERS[:500]
+# TICKERS = TICKERS[:1000]
 
-for ticker in tqdm(TICKERS):
+for ticker in TICKERS:
+    print(ticker)
     df = get_data(ticker, period='day', days=max_days)
 
     if df is None or len(df) < 201:
@@ -69,7 +72,7 @@ for ticker in tqdm(TICKERS):
 
             # we only check for long positions with risk reward ratio = 1:5
             buy_price = row['Close']
-            stop_loss = row['Low'] - abs(row['Close'] - row['Low'])  #  0.98 * row['Close']  #  row['EMA21_low']  #  row['Low'] - abs(row['Close'] - row['Low'])  #  row['EMA21_low'])
+            stop_loss = row['Low'] - abs(row['Close'] - row['Low'])  # row['Low'] - abs(row['Close'] - row['Low'])  # row['Low'] - abs(row['Close'] - row['Low'])  #  0.98 * row['Close']  #  row['EMA21_low']  #  row['Low'] - abs(row['Close'] - row['Low'])  #  row['EMA21_low'])
             take_profit = buy_price + risk_reward_ratio * abs(buy_price - stop_loss)
 
             deal_is_done = False
@@ -91,7 +94,7 @@ for ticker in tqdm(TICKERS):
 
 def evaluate_model(model_x, X_test, y_test):
     # y_pred = model_x.predict(X_test)
-    y_pred_proba = model.predict_proba(X_test)[:, 1]
+    y_pred_proba = model_x.predict_proba(X_test)[:, 1]
     y_pred = (y_pred_proba >= 0.5).astype(int)      # 0.9 >  increase this to increase precision for good bets
 
     try:
@@ -123,6 +126,30 @@ def evaluate_model(model_x, X_test, y_test):
 
 print(f'TOTAL DATA {len(results)}')
 print(f'POSITIVE CASES: {sum(results)}')
+
+
+#
+
+kmeans = KMeans(n_clusters=20, random_state=42)
+clusters = kmeans.fit_predict(new_matrix)
+
+clusters_win_rate = {k: {'total': 0, 'win': 0} for k in range(0, 20)}
+
+for i, c in enumerate(clusters):
+    clusters_win_rate[c]['total'] += 1
+    clusters_win_rate[c]['win'] += results[i]
+
+best_score = 0
+best_class = {}
+for c in clusters_win_rate.values():
+    print(c)
+    if c['win'] / c['total'] > best_score:
+        best_score = c['win'] / c['total']
+        best_class = c
+
+print(f'BEST CLASS: {best_class}')
+
+#
 
 # model = CatBoostClassifier(iterations=10000, depth=10, thread_count=7, learning_rate=0.001, loss_function='Logloss')
 model = CatBoostClassifier(
