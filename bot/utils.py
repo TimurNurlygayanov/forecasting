@@ -114,7 +114,25 @@ def get_data_b(ticker='AAPL', period='minute', multiplier=1, save_data=True, day
 
 
 def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=200,
-             start_date=None, end_date=None):
+             start_date=None, end_date=None, init_only=False):
+    """
+    Parameters
+    ----------
+    ticker
+    period
+    multiplier
+    save_data
+    days
+    start_date
+    end_date
+    init_only  - if init_only == True, we should only try to load the data from the network, but
+            do not spend time for anything else if we already have data stored in cache
+
+    Returns
+    -------
+
+    """
+
     df = None
     indexes = []
     data = {'Close': [], 'Open': [], 'Low': [], 'High': [], 'vwap': [], 'volume': []}
@@ -124,9 +142,10 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
         end_date = END.strftime("%Y-%m-%d")
 
     try:
-        file_name = f'rl/data/{ticker}_{period}_{datetime.now().strftime("%Y-%m-%d")}.xlsx'
+        file_name = f'rl/data/{ticker}_{period}_{datetime.now().strftime("%Y-%m-%d")}.parquet'
         if os.path.isfile(file_name) and save_data:
-            df = pd.read_excel(file_name, index_col=0)
+            if not init_only:
+                df = pd.read_parquet(file_name)  # , index_col=0
         else:
             for a in client.list_aggs(ticker=ticker, multiplier=multiplier, timespan=period,  # "hour"
                                       from_=start_date,
@@ -146,28 +165,26 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
             df.sort_index(inplace=True)
             df.index = pd.to_datetime(df.index)
 
+            df.ta.ema(close='Low', length=21, append=True, col_names=('EMA21_low',))
+            df.ta.ema(close='Low', length=9, append=True, col_names=('EMA9_low',))
+            df.ta.ema(length=7, append=True, col_names=('EMA7',))
+            df.ta.ema(length=21, append=True, col_names=('EMA21',))
+            df.ta.ema(length=50, append=True, col_names=('EMA50',))
+            df.ta.ema(length=200, append=True, col_names=('EMA200',))
+            df.ta.supertrend(append=True, length=10, multiplier=3.0,
+                             col_names=('S_trend', 'S_trend_d', 'S_trend_l', 'S_trend_s',))
+            df.ta.supertrend(append=True, length=34, multiplier=4.0,
+                             col_names=('S_trend34', 'S_trend_d34', 'S_trend_l34', 'S_trend_s34',))
+            df.ta.rsi(length=14, append=True, col_names=('RSI',))
+            df.ta.macd(append=True, col_names=('MACD', 'MACD_hist', 'MACD_signal'))
+            df.ta.bbands(col_names=('L', 'M', 'U', 'B', 'P'), append=True)
+
+            df.ta.obv(append=True, col_names=('OBV',))
+
+            df.ta.atr(append=True, col_names=('ATR',))
+
             if save_data:
-                df.to_excel(file_name, index=True, header=True)
-
-        # df.ta.cdl_pattern(append=True, name=["doji", "morningstar", "hammer", "engulfing", "shootingstar"])
-
-        df.ta.ema(close='Low', length=21, append=True, col_names=('EMA21_low',))
-        df.ta.ema(close='Low', length=9, append=True, col_names=('EMA9_low',))
-        df.ta.ema(length=7, append=True, col_names=('EMA7',))
-        df.ta.ema(length=21, append=True, col_names=('EMA21',))
-        df.ta.ema(length=50, append=True, col_names=('EMA50',))
-        df.ta.ema(length=200, append=True, col_names=('EMA200',))
-        df.ta.supertrend(append=True, length=10, multiplier=3.0,
-                         col_names=('S_trend', 'S_trend_d', 'S_trend_l', 'S_trend_s',))
-        df.ta.supertrend(append=True, length=34, multiplier=4.0,
-                         col_names=('S_trend34', 'S_trend_d34', 'S_trend_l34', 'S_trend_s34',))
-        df.ta.rsi(length=14, append=True, col_names=('RSI',))
-        df.ta.macd(append=True, col_names=('MACD', 'MACD_hist', 'MACD_signal'))
-        df.ta.bbands(col_names=('L', 'M', 'U', 'B', 'P'), append=True)
-
-        df.ta.obv(append=True, col_names=('OBV',))
-
-        df.ta.atr(append=True, col_names=('ATR',))
+                df.to_parquet(file_name)  # , index=True, header=True
     except Exception as e:
         print(f'No data for {ticker} {e}')
 
@@ -247,7 +264,7 @@ def is_engulfing_bullish(open1, open2, close1, close2):
     return 0
 
 
-def get_state(df, i: int = 0, step_size: int = 10):   # dfHA, ,
+def get_state(df, i: int = 0):
     state = [0] * 123
     row = df.iloc[i].copy()
 
