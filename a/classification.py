@@ -22,8 +22,7 @@ from catboost import CatBoostClassifier
 
 from tqdm import tqdm
 
-from sklearn.cluster import KMeans
-import sklearn.metrics as metrics
+import optuna
 
 from joblib import Parallel, delayed
 
@@ -43,9 +42,8 @@ risk_reward_ratio = 5
 
 # TICKERS = TICKERS[:100]
 
-# Run 10 threads to get data to make this faster
 
-
+"""
 def get_data_parallel(ticker, callback=None):
     get_data(ticker, period='day', days=max_days)
 
@@ -60,7 +58,7 @@ with tqdm(total=len(TICKERS)) as pbar:
     Parallel(n_jobs=-1, require='sharedmem', timeout=200)(
         delayed(get_data_parallel)(ticker, callback=update) for ticker in TICKERS
     )
-
+"""
 # Data is collected, now we can use cached data in our loop
 
 
@@ -170,35 +168,14 @@ for res in DATA_POOL:
 print(f'TOTAL DATA {len(results)}')
 print(f'POSITIVE CASES: {sum(results)}')
 
-#
-"""
-
-kmeans = KMeans(n_clusters=20, random_state=42)
-clusters = kmeans.fit_predict(new_matrix)
-
-clusters_win_rate = {k: {'total': 0, 'win': 0} for k in range(0, 20)}
-
-for i, c in enumerate(clusters):
-    clusters_win_rate[c]['total'] += 1
-    clusters_win_rate[c]['win'] += results[i]
-
-best_score = 0
-best_class = {}
-for c in clusters_win_rate.values():
-    print(c)
-    if c['win'] / c['total'] > best_score:
-        best_score = c['win'] / c['total']
-        best_class = c
-
-print(f'BEST CLASS: {best_class}')
-"""
-#
+##
 
 # model = CatBoostClassifier(iterations=10000, depth=10, thread_count=7, learning_rate=0.001, loss_function='Logloss')
 model = CatBoostClassifier(
-    iterations=1000, depth=10, thread_count=7, #  task_type='GPU',
-    learning_rate=0.1, eval_metric='Precision', loss_function='Logloss',
-    class_weights=[1, 1]   # this one helps to increase Recoll for the white dots
+    iterations=1000, depth=10, thread_count=9, use_best_model=True,
+    learning_rate=0.1, loss_function='Logloss', eval_metric='Precision',
+    class_weights=[1, 1],   # this one helps to increase Recoll for the white dots
+    custom_loss=['AUC', 'Precision']
 )
 X_train, X_test, y_train, y_test = train_test_split(new_matrix, results, test_size=0.1, random_state=42)
 
@@ -214,7 +191,12 @@ X_train_balanced, y_train_balanced = smote.fit_resample(X_train, y_train)
 
 print(f'Positive options in balanced train dataset: {sum(y_train_balanced)} / {len(X_train_balanced)}')
 
-model.fit(X_train_balanced, y_train_balanced, eval_set=(X_test, y_test), verbose=False)
+model.fit(
+    X_train_balanced, y_train_balanced,
+    eval_set=(X_test, y_test),
+    early_stopping_rounds=100,
+    verbose=10
+)
 
 evaluate_model(model, X_test, y_test)
 
