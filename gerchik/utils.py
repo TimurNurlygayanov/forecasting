@@ -15,7 +15,8 @@ import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
 
 
-def draw(df, file_name='', level=0, ticker='', boxes=None, future=0, second_levels=None):
+def draw(df, file_name='', level=0, ticker='', boxes=None, future=0, second_levels=None,
+         stop_loss=0, take_profit=0):
     start_moment = df.index[0]
     end_moment = df.index[-1]
 
@@ -83,6 +84,18 @@ def draw(df, file_name='', level=0, ticker='', boxes=None, future=0, second_leve
                         y0=min(df['Low'].tolist()[-future:]),
                         y1=max(df['High'].tolist()[-future:]),
                         line=dict(color='magenta', width=1),
+                        row=1, col=1)
+
+    if stop_loss > 0 and take_profit > 0:
+        graph.add_shape(type='rect', x0=len(df)-10, x1=len(df),
+                        y0=df['Close'].tolist()[-10],
+                        y1=stop_loss,
+                        line=dict(color='red', width=1),
+                        row=1, col=1)
+        graph.add_shape(type='rect', x0=len(df) - 10, x1=len(df),
+                        y0=df['Close'].tolist()[-10],
+                        y1=take_profit,
+                        line=dict(color='green', width=1),
                         row=1, col=1)
 
     """

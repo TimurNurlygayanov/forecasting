@@ -22,7 +22,7 @@ from catboost import CatBoostClassifier
 
 from tqdm import tqdm
 
-import optuna
+from gerchik.utils import draw
 
 from joblib import Parallel, delayed
 
@@ -40,26 +40,7 @@ step_size = 2  # make sure we do not use similar data for training and verificat
 max_days = 1000
 risk_reward_ratio = 5
 
-# TICKERS = TICKERS[:100]
-
-
-"""
-def get_data_parallel(ticker, callback=None):
-    get_data(ticker, period='day', days=max_days)
-
-    callback()
-
-
-print('Collecting data...')
-with tqdm(total=len(TICKERS)) as pbar:
-    def update():
-        pbar.update()
-
-    Parallel(n_jobs=-1, require='sharedmem', timeout=200)(
-        delayed(get_data_parallel)(ticker, callback=update) for ticker in TICKERS
-    )
-"""
-# Data is collected, now we can use cached data in our loop
+TICKERS = TICKERS[:100]
 
 
 def run_me(ticker, callback=None):
@@ -94,24 +75,28 @@ def run_me(ticker, callback=None):
             state = get_state(df, i=i)
 
             # we only check for long positions with risk reward ratio = 1:5
-            buy_price = row['Close']
-            stop_loss = row['Low'] - abs(row['Close'] - row['Low'])  # row['Low'] - abs(row['Close'] - row['Low'])  # row['Low'] - abs(row['Close'] - row['Low'])  #  0.98 * row['Close']  #  row['EMA21_low']  #  row['Low'] - abs(row['Close'] - row['Low'])  #  row['EMA21_low'])
+            buy_price = row['High']
+            stop_loss = row['High'] - 0.2 * atr
             take_profit = buy_price + risk_reward_ratio * abs(buy_price - stop_loss)
 
-            deal_is_done = False
-            for j in range(i+1, min(len(df)-1, i + 10)):
-                if not deal_is_done:
-                    if df['Low'].values[j] <= stop_loss:
-                        result = 0
-                        deal_is_done = True
-                    elif df['High'].values[j] >= take_profit:
-                        result = 1
-                        deal_is_done = True
-            #
+            # zakritie pod low, Get rid of "bad" stop losses
+            if abs(take_profit - buy_price) < abs(row['High'] - row['Low']):
+                local_pool.append((state, 0))
+            else:
+                deal_is_done = False
+                for j in range(i+1, min(len(df)-1, i + 10)):
+                    if not deal_is_done:
+                        if df['Low'].values[j] <= stop_loss:
+                            result = 0
+                            deal_is_done = True
+                        elif df['High'].values[j] >= take_profit:
+                            result = 1
+                            deal_is_done = True
+                #
 
-            # new_matrix.append(state)
-            # results.append(result)
-            local_pool.append((state, result))
+                # new_matrix.append(state)
+                # results.append(result)
+                local_pool.append((state, result))
 
     return local_pool, {'t': ticker, 's': get_state(df, len(df)-1)}
 
@@ -172,10 +157,14 @@ print(f'POSITIVE CASES: {sum(results)}')
 
 # model = CatBoostClassifier(iterations=10000, depth=10, thread_count=7, learning_rate=0.001, loss_function='Logloss')
 model = CatBoostClassifier(
-    iterations=1000, depth=10, thread_count=9, use_best_model=True,
-    learning_rate=0.1, loss_function='Logloss', eval_metric='Precision',
-    class_weights=[1, 1],   # this one helps to increase Recoll for the white dots
-    custom_loss=['AUC', 'Precision']
+    iterations=10000, depth=10, thread_count=9, use_best_model=True,
+    learning_rate=0.001, loss_function='Logloss', eval_metric='Precision',
+    class_weights=[1, 2],   # this one helps to increase Recoll for the white dots
+    custom_loss=['AUC', 'Precision'],
+    # l2_leaf_reg=4,
+    # bagging_temperature=0.1,
+    # random_strength=0.2,
+    # leaf_estimation_method='Newton',
 )
 X_train, X_test, y_train, y_test = train_test_split(new_matrix, results, test_size=0.1, random_state=42)
 
@@ -194,7 +183,7 @@ print(f'Positive options in balanced train dataset: {sum(y_train_balanced)} / {l
 model.fit(
     X_train_balanced, y_train_balanced,
     eval_set=(X_test, y_test),
-    early_stopping_rounds=100,
+    early_stopping_rounds=1000,
     verbose=10
 )
 
@@ -211,3 +200,25 @@ for ticker, state in latest_state.items():
 """
 
 # get_features_importance(model)
+
+for ticker in TICKERS:
+    df = get_data(ticker, period='day', days=max_days)
+
+    # print(ticker, len(df))
+
+    if df is None or len(df) < 211:
+        continue
+
+    state = get_state(df, len(df) - 10)
+
+    res = model.predict_proba(state)
+
+    if res[1] > 0.5:
+        buy_price = df['Close'].tolist()[-10]
+        stop_loss = min(df['Low'].tolist()[-15:-9]) - 0.01
+        take_profit = buy_price + risk_reward_ratio * abs(buy_price - stop_loss)
+
+        draw(
+            df.iloc[-70:].copy(), file_name=ticker, ticker=ticker + f" {res[1]:.2f}",
+            level=0, boxes=[], stop_loss=stop_loss, take_profit=take_profit
+        )

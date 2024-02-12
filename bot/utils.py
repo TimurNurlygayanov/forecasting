@@ -11,6 +11,8 @@ import pandas as pd
 import pandas_ta  # for TA magic
 from tqdm import tqdm
 
+import numpy as np
+
 from forex_python.converter import CurrencyRates
 
 
@@ -142,7 +144,8 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
         end_date = END.strftime("%Y-%m-%d")
 
     try:
-        file_name = f'rl/data/{ticker}_{period}_{datetime.now().strftime("%Y-%m-%d")}.parquet'
+        # file_name = f'rl/data/{ticker}_{period}_{datetime.now().strftime("%Y-%m-%d")}.parquet'
+        file_name = f'rl/data/{ticker}_{period}.parquet'
         if os.path.isfile(file_name) and save_data:
             if not init_only:
                 df = pd.read_parquet(file_name)  # , index_col=0
@@ -171,7 +174,7 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
             df.ta.ema(length=21, append=True, col_names=('EMA21',))
             df.ta.ema(length=50, append=True, col_names=('EMA50',))
             df.ta.ema(length=200, append=True, col_names=('EMA200',))
-            df.ta.supertrend(append=True, length=10, multiplier=3.0,
+            df.ta.supertrend(append=True, length=10, multiplier=1.0,
                              col_names=('S_trend', 'S_trend_d', 'S_trend_l', 'S_trend_s',))
             df.ta.supertrend(append=True, length=34, multiplier=4.0,
                              col_names=('S_trend34', 'S_trend_d34', 'S_trend_l34', 'S_trend_s34',))
@@ -182,6 +185,8 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
             df.ta.obv(append=True, col_names=('OBV',))
 
             df.ta.atr(append=True, col_names=('ATR',))
+
+            df.ta.adx(append=True, col_names=('ADX', 'DMP', 'DMN'))
 
             if save_data:
                 df.to_parquet(file_name)  # , index=True, header=True
@@ -265,7 +270,7 @@ def is_engulfing_bullish(open1, open2, close1, close2):
 
 
 def get_state(df, i: int = 0):
-    state = [0] * 123
+    state = [0] * 140
     row = df.iloc[i].copy()
 
     #
@@ -361,11 +366,9 @@ def get_state(df, i: int = 0):
     state[36] = 1 if df['volume'].values[i - 1] > df['volume'].values[i - 2] else 0
     state[37] = 1 if df['volume'].values[i - 2] > df['volume'].values[i - 3] else 0
 
-    """
-    state[38] = 1 if df['vwap'].values[i] > df['vwap'].values[i - 1] else 0
-    state[39] = 1 if df['vwap'].values[i - 1] > df['vwap'].values[i - 2] else 0
-    state[40] = 1 if df['vwap'].values[i - 2] > df['vwap'].values[i - 3] else 0
-    """
+    state[38] = 1 if row['ADX'] < 20 else 0
+    state[39] = 1 if row['ADX'] < 40 else 0
+    state[40] = 1 if row['ADX'] > 60 else 0
 
     state[41] = 1 if row['High'] > row['U'] else 0
     state[42] = 1 if row['Close'] > row['U'] else 0
@@ -454,7 +457,34 @@ def get_state(df, i: int = 0):
         # 103-113
         state[103 + k] = (df['OBV'].values[i - k] - min_obv) / (max_obv - min_obv)
         # 113-123
-        state[113 + k] = (df['ATR'].values[i - k] - min_obv) / (max_obv - min_obv)
+        state[113 + k] = (df['ATR'].values[i - k] - min_atr) / (max_atr - min_atr)
+
+    df_log_close = np.log(df['Close'].values[i-10:i+1])
+    close_max = max(df_log_close)
+    close_min = min(df_log_close)
+
+    for k in range(0, 10):
+        # 123-133
+        state[123 + k] = (df_log_close[k] - close_min) / (close_max - close_min)
+
+    state[133] = 1 if row['Open'] > row['Close'] else 0
+    xvost_h = abs(row['High'] - max(row['Close'], row['Open']))
+    xvost_w = abs(row['Low'] - min(row['Close'], row['Open']))
+    body = abs(row['Open'] - row['Close'])
+    state[134] = 1 if xvost_h > body else 0
+    state[135] = 1 if xvost_w > body else 0
+    state[136] = 1 if xvost_h > xvost_w else 0
+
+    state[137] = 1
+    state[138] = 1
+    state[139] = 1
+    for k in range(0, 10):
+        if df['EMA50'].values[i - k] < df['EMA50'].values[i - k - 1]:
+            state[137] = 0
+        if df['EMA21'].values[i - k] < df['EMA21'].values[i - k - 1]:
+            state[138] = 0
+        if df['EMA7'].values[i - k] < df['EMA7'].values[i - k - 1]:
+            state[139] = 0
 
     return state
 
