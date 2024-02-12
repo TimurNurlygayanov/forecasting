@@ -269,9 +269,10 @@ def is_engulfing_bullish(open1, open2, close1, close2):
     return 0
 
 
-def get_state(df, i: int = 0):
+def get_state(df_original, i: int = 0):
     state = [0] * 140
-    row = df.iloc[i].copy()
+    row = df_original.iloc[i].copy()
+    df = df_original.iloc[:i+1].copy()
 
     #
     state[0] = 1 if row['Low'] > row['EMA200'] and df['Low'].values[i - 1] < df['EMA200'].values[i - 1] else 0
@@ -310,11 +311,6 @@ def get_state(df, i: int = 0):
 
     state[10] = 1 if is_green else 0  # last 3 candles are green?
 
-    state[11] = is_engulfing_bullish(
-        df['Open'].values[i - 1], df['Open'].values[i],
-        df['Close'].values[i - 1], df['Close'].values[i]
-    )
-
     state[12] = 1 if row['RSI'] < 30 else 0
     state[13] = 1 if row['RSI'] < 40 else 0
     state[14] = 1 if row['RSI'] > 70 else 0
@@ -330,12 +326,8 @@ def get_state(df, i: int = 0):
 
     # lower low and higher high
     state[22] = 1 if row['Low'] <= min(df['Low'].values[i - 10:i - 1]) else 0
-    state[23] = 1 if row['Low'] <= min(df['Low'].values[i - 50:i - 1]) else 0
-    state[24] = 1 if row['Low'] <= min(df['Low'].values[i - 200:i - 1]) else 0
 
     state[25] = 1 if row['High'] >= max(df['High'].values[i - 10:i - 1]) else 0
-    state[26] = 1 if row['High'] >= max(df['High'].values[i - 50:i - 1]) else 0
-    state[27] = 1 if row['High'] >= max(df['High'].values[i - 200:i - 1]) else 0
 
     # if price higher that EMA for long time? - EMA 50
     higher_price = True
@@ -440,51 +432,38 @@ def get_state(df, i: int = 0):
         state[72] = 1
 
     # Add info about recent price movements
-    m_high = max(df['High'].values[i-10:i+1])
-    m_low = min(df['Low'].values[i-10:i+1])
-    min_obv = min(df['OBV'].values[i-10:i+1])
-    min_atr = min(df['ATR'].values[i-10:i+1])
-    max_obv = max(df['OBV'].values[i - 10:i + 1])
+    df['Close_log'] = np.log(df['Close'].values[:i + 1])
+    df['High_log'] = np.log(df['High'].values[:i + 1])
+    df['Low_log'] = np.log(df['Low'].values[:i + 1])
+    df['OBV_log'] = np.log(df['OBV'].values[:i + 1])
+    df['EMA7_log'] = np.log(df['EMA7'].values[:i + 1])
+    df['EMA21_log'] = np.log(df['EMA21'].values[:i + 1])
+    df['EMA50_log'] = np.log(df['EMA50'].values[:i + 1])
+
+    m_high = max(df['High_log'].values[i - 10:i + 1])
+    m_low = min(df['Low_log'].values[i - 10:i + 1])
+    min_obv = min(df['OBV_log'].values[i - 10:i + 1])
+    min_atr = min(df['ATR'].values[i - 10:i + 1])
+    max_obv = max(df['OBV_log'].values[i - 10:i + 1])
     max_atr = max(df['ATR'].values[i - 10:i + 1])
     new_max = m_high - m_low
     for k in range(0, 10):
         # 73-82
-        state[73 + k] = (df['Close'].values[i-k] - m_low) / new_max
+        state[73 + k] = df['Close_log'].values[i - k]  # (df['Close_log'].values[i - k] - m_low) / new_max
         # 83-93
-        state[83 + k] = (df['Low'].values[i - k] - m_low) / new_max
+        state[83 + k] = df['Low_log'].values[i - k]  # (df['Low_log'].values[i - k] - m_low) / new_max
         # 93-103
-        state[93 + k] = (df['High'].values[i - k] - m_low) / new_max
+        state[93 + k] = df['High_log'].values[i - k]  # (df['High_log'].values[i - k] - m_low) / new_max
         # 103-113
-        state[103 + k] = (df['OBV'].values[i - k] - min_obv) / (max_obv - min_obv)
+        state[103 + k] = df['OBV_log'].values[i - k]  # (df['OBV_log'].values[i - k] - min_obv) / (max_obv - min_obv)
         # 113-123
-        state[113 + k] = (df['ATR'].values[i - k] - min_atr) / (max_atr - min_atr)
-
-    df_log_close = np.log(df['Close'].values[i-10:i+1])
-    close_max = max(df_log_close)
-    close_min = min(df_log_close)
-
-    for k in range(0, 10):
+        state[113 + k] = df['ATR'].values[i - k]  # (df['ATR'].values[i - k] - min_atr) / (max_atr - min_atr)
         # 123-133
-        state[123 + k] = (df_log_close[k] - close_min) / (close_max - close_min)
-
-    state[133] = 1 if row['Open'] > row['Close'] else 0
-    xvost_h = abs(row['High'] - max(row['Close'], row['Open']))
-    xvost_w = abs(row['Low'] - min(row['Close'], row['Open']))
-    body = abs(row['Open'] - row['Close'])
-    state[134] = 1 if xvost_h > body else 0
-    state[135] = 1 if xvost_w > body else 0
-    state[136] = 1 if xvost_h > xvost_w else 0
-
-    state[137] = 1
-    state[138] = 1
-    state[139] = 1
-    for k in range(0, 10):
-        if df['EMA50'].values[i - k] < df['EMA50'].values[i - k - 1]:
-            state[137] = 0
-        if df['EMA21'].values[i - k] < df['EMA21'].values[i - k - 1]:
-            state[138] = 0
-        if df['EMA7'].values[i - k] < df['EMA7'].values[i - k - 1]:
-            state[139] = 0
+        state[113 + k] = df['EMA7_log'].values[i - k]  # (df['EMA7_log'].values[i - k] - min_atr) / (max_atr - min_atr)
+        # 133-143
+        state[113 + k] = df['EMA21_log'].values[i - k]  # (df['EMA21_log'].values[i - k] - min_atr) / (max_atr - min_atr)
+        # 143-153
+        state[113 + k] = df['EMA50_log'].values[i - k]  # (df['EMA50_log'].values[i - k] - min_atr) / (max_atr - min_atr)
 
     return state
 
