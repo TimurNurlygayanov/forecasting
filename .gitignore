@@ -5,3 +5,4 @@ __pycache__
 *DS_store*
 catboost_info
 *.parquet
+*.json

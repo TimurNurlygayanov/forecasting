@@ -31,7 +31,7 @@ def calculate_volatility(high_window, low_window):
 
 # TICKERS = [t[2:] for t in sorted(ALL_TICKERS)]  # this is for forex
 ALL_OPERATIONS = []
-max_days = 1000  # collect data for about 5 years
+max_days = 200  # collect data for about 5 years
 
 
 def run_me(ticker, progress_value) -> list:
@@ -39,41 +39,46 @@ def run_me(ticker, progress_value) -> list:
     result = []
 
     # df = get_data_alpha(ticker, interval='Daily', limit=max_days)
-    df = get_data(ticker, period='day', days=max_days)
+    df = get_data(ticker, period='hour', days=max_days)
 
     # make sure it is mature stock and we will be able to calculate EMA200
-    if df is None or len(df) < 201:
-        return []
-
-    average_volume = (sum(df['volume'].tolist()) / len(df)) // 1000
-    if average_volume < 100:  # only take shares with 100k+ average volume
+    if df is None or len(df) < 360:
         return []
 
     current_price = df['Close'].tolist()[-1]
     if current_price < 1:  # this actually helps because penny stocks behave differently
         return []  # ignore penny stocks and huge stocks
 
-    atr = calculate_atr(df)
-    if check_for_bad_candles(df, atr):
-        return []
-
+    params = []
     # first - calculate EMAs so we have this data
-    file_name = f'collect_data/calculated/{ticker}.parquet'
+    file_name = f'collect_data/calculated/h_{ticker}.parquet'
     if os.path.isfile(file_name):
         df = pd.read_parquet(file_name)
     else:
-        for s in range(5, 75, 2):
-            for b in range(7, 200, 2):
-                if s == b:
-                    continue
+        for s in range(5, 50, 3):
 
-                if f'EMA{s}' not in df:
-                    df.ta.ema(length=s, append=True, col_names=(f'EMA{s}',))
-                if f'EMA{b}' not in df:
-                    df.ta.ema(length=b, append=True, col_names=(f'EMA{b}',))
+            if f'EMA{s}' not in df:
+                df.ta.ema(length=s, append=True, col_names=(f'EMA{s}',))
+            if f'SMA{s}' not in df:
+                df.ta.sma(length=s, append=True, col_names=(f'SMA{s}',))
+            if f'fwma{s}' not in df:
+                df.ta.fwma(length=s, append=True, col_names=(f'fwma{s}',))
+            if f'tema{s}' not in df:
+                df.ta.tema(length=s, append=True, col_names=(f'tema{s}',))
+            if f'wma{s}' not in df:
+                df.ta.wma(length=s, append=True, col_names=(f'wma{s}',))
+            if f'zlma{s}' not in df:
+                df.ta.zlma(length=s, append=True, col_names=(f'zlma{s}',))
 
-                df[f'EMA{s}_prev'] = df[f'EMA{s}'].shift(1)
-                df[f'EMA{b}_prev'] = df[f'EMA{b}'].shift(1)
+            # Precalculate "previous" values to confirm crossing using one row
+            df[f'EMA{s}_prev'] = df[f'EMA{s}'].shift(1)
+            df[f'SMA{s}_prev'] = df[f'SMA{s}'].shift(1)
+            df[f'fwma{s}_prev'] = df[f'fwma{s}'].shift(1)
+            df[f'tema{s}_prev'] = df[f'tema{s}'].shift(1)
+            df[f'wma{s}_prev'] = df[f'wma{s}'].shift(1)
+            df[f'zlma{s}_prev'] = df[f'zlma{s}'].shift(1)
+
+            params += [f'EMA{s}', f'SMA{s}', f'fwma{s}', f'tema{s}', f'wma{s}', f'zlma{s}']
 
         def calc_volatility(highs, lows):
             return highs.max() - lows.min()
@@ -83,47 +88,50 @@ def run_me(ticker, progress_value) -> list:
         df.to_parquet(file_name)
 
     # Cut on history and evaluation dataset:
-    df_last_month = df.iloc[-45:]  # we need to include 5 days of history, but we will not make deals
-                                          # for the first 5 days and last 20 days of this data frame
-    df = df.iloc[:-40]  # cut here the last month (we trade first 20 days, and also waiting for all results 20 days more
+    df_last_month = df.iloc[-180:]  # we need to include 20 hours of history, but we will not make deals
+                                    # for the first 20 hours and last 5 hours of this data frame
+    df = df.iloc[:-160]  # cut here the last month (we trade first 20 days, and also waiting for all results 20 days more
 
-    file_name = f'collect_data/calculated/WW_{ticker}.json'
+    file_name = f'collect_data/calculated/WW_hour_{ticker}.json'
     if os.path.isfile(file_name):
         with open(file_name, encoding='utf-8', mode='r') as f:
             WW = json.load(f)
     else:
-        for s in range(5, 75, 2):
-            for b in range(7, 200, 2):
+        for s in params:
+            for b in params:
                 if s == b:
                     continue
 
                 RESULTS = []
 
                 for i, (index, row) in enumerate(df.iterrows()):
-                    if max(s, b) < i < len(df) - 20:
-                        if row[f'EMA{s}'] > row[f'EMA{b}'] and row[f'EMA{s}_prev'] < row[f'EMA{b}_prev']:
+                    if 200 < i < len(df) - 20:
+                        if row[s] > row[b] and row[f'{s}_prev'] < row[f'{b}_prev']:
                             buy_price = df['Open'].values[i + 1]
                             stop_loss = buy_price - row['Volatility'] / 2
                             take_profit = buy_price + 4 * abs(stop_loss - buy_price)
                             profit = 0
 
-                            for j in range(i + 1, len(df)):
-                                if profit == 0:
-                                    if df['Low'].values[j] < stop_loss:
-                                        profit = -abs(buy_price - stop_loss) / buy_price
-                                    elif df['High'].values[j] > take_profit:
-                                        profit = abs(take_profit - buy_price) / buy_price
+                            if abs(stop_loss - buy_price) / buy_price < 0.03:
+                                for j in range(i + 1, len(df)):
+                                    if profit == 0:
+                                        if df['Low'].values[j] < stop_loss:
+                                            profit = -abs(buy_price - stop_loss) / buy_price
+                                        elif df['High'].values[j] > take_profit:
+                                            profit = abs(take_profit - buy_price) / buy_price
 
-                            if profit != 0 and abs(stop_loss - buy_price) / buy_price < 0.03:
-                                RESULTS.append(profit)
+                                if profit != 0:
+                                    RESULTS.append(profit)
 
                 failed = sum([1 for r in RESULTS if r < 0])
                 passed = sum([1 for r in RESULTS if r > 0])
 
                 # if we had some good cases in the history and win rate is good,
                 # we hope it will also work for us in the future (but no guarantee)
-                if len(RESULTS) > 4 and passed / (passed + failed) > 0.4:
-                    WW.append({'combo': [s, b], 'win rate': 100 * passed / (passed + failed)})
+                if len(RESULTS) > 10:
+                    win_rate = 100 * passed / (passed + failed)
+                    if win_rate > 60:
+                        WW.append({'combo': [s, b], 'win rate': win_rate})
 
         with open(file_name, encoding='utf-8', mode='w+') as f:
             json.dump(WW, f)
@@ -138,7 +146,7 @@ def run_me(ticker, progress_value) -> list:
             for combo in WW:
                 s, b = combo['combo']
 
-                if row[f'EMA{s}'] > row[f'EMA{b}'] and row[f'EMA{s}_prev'] < row[f'EMA{b}_prev']:
+                if row[s] > row[b] and row[f'{s}_prev'] < row[f'{b}_prev']:
                     buy_price = df_last_month['Open'].values[i + 1]
                     stop_loss = buy_price - row['Volatility'] / 2
 
@@ -146,16 +154,15 @@ def run_me(ticker, progress_value) -> list:
                     if abs(stop_loss - buy_price) / buy_price < 0.03:
                         # check that this strategy bring good results for the current period
                         if len(result) < 2 or sum(result) > 0:
-                            if row['Close'] > row['Open'] and 10 < row['ADX'] < 20:  # this helps to increase win rate
+                            if row['Close'] > row['Open']:   # this helps to increase win rate
                                 perform = 1
 
             if perform:
-                # date_obj = datetime.strptime(index, '%Y-%m-%d')
-                day_of_week = index.weekday()
+                # day_of_week = index.weekday()
 
                 buy_price = df_last_month['Open'].values[i + 1]
                 stop_loss = buy_price - row['Volatility'] / 2
-                take_profit = buy_price + 4 * abs(stop_loss - buy_price)
+                take_profit = buy_price + 3 * abs(stop_loss - buy_price)
                 profit = 0
 
                 for j in range(i + 1, len(df_last_month)):
@@ -165,17 +172,19 @@ def run_me(ticker, progress_value) -> list:
                         elif df_last_month['High'].values[j] > take_profit:
                             profit = abs(take_profit - buy_price) / buy_price
 
-                if profit != 0 and day_of_week == 0:
+                if profit != 0:
                     result.append(profit)
 
+                    """
                     draw(
                         df_last_month.copy(), file_name=ticker + f' {i}', ticker=ticker,
                         level=0, boxes=[], stop_loss=stop_loss, take_profit=take_profit,
                         buy_price=buy_price, buy_index=i+1
                     )
+                    """
 
-                    print(f'  {progress_value:.2f}% done...', end='\r')
-                    return result
+                    # print(f'  {progress_value:.2f}% done...', end='\r')
+                    # return result
 
     print(f'  {progress_value:.2f}% done...', end='\r')
     return result
@@ -185,9 +194,9 @@ if __name__ == "__main__":
     print('Preparing training dataset...')
 
     TICKERS = get_tickers_polygon(limit=5000)  # this is for shares
-    # TICKERS = TICKERS[:2000]
+    TICKERS = TICKERS[:200]
 
-    results = Parallel(n_jobs=-1, backend="multiprocessing", timeout=300)(
+    results = Parallel(n_jobs=-1, backend="multiprocessing", timeout=400)(
         delayed(run_me)(ticker, 100*e/len(TICKERS)) for e, ticker in enumerate(TICKERS)
     )
 

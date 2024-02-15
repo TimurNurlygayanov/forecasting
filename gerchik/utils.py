@@ -3,7 +3,6 @@ import datetime
 from plotly.subplots import make_subplots
 import plotly.io as pio
 from plotly.graph_objs.layout.shape import Label
-import plotly.graph_objects as go
 
 from detecto.core import Dataset
 from detecto.core import Model
@@ -16,7 +15,7 @@ warnings.filterwarnings('ignore', category=UserWarning)
 
 
 def draw(df, file_name='', level=0, ticker='', boxes=None, future=0, second_levels=None,
-         stop_loss=0, take_profit=0):
+         stop_loss=0, take_profit=0, buy_price=0, buy_index=0):
     start_moment = df.index[0]
     end_moment = df.index[-1]
 
@@ -87,13 +86,13 @@ def draw(df, file_name='', level=0, ticker='', boxes=None, future=0, second_leve
                         row=1, col=1)
 
     if stop_loss > 0 and take_profit > 0:
-        graph.add_shape(type='rect', x0=len(df)-10, x1=len(df),
-                        y0=df['Close'].tolist()[-10],
+        graph.add_shape(type='rect', x0=buy_index, x1=len(df),
+                        y0=buy_price,
                         y1=stop_loss,
                         line=dict(color='red', width=1),
                         row=1, col=1)
-        graph.add_shape(type='rect', x0=len(df) - 10, x1=len(df),
-                        y0=df['Close'].tolist()[-10],
+        graph.add_shape(type='rect', x0=buy_index, x1=len(df),
+                        y0=buy_price,
                         y1=take_profit,
                         line=dict(color='green', width=1),
                         row=1, col=1)
