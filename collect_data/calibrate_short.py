@@ -55,30 +55,35 @@ def run_me(ticker, progress_value) -> list:
     if os.path.isfile(file_name):
         df = pd.read_parquet(file_name)
     else:
-        for s in range(5, 50, 3):
+        for s in range(21, 200, 7):
 
             if f'EMA{s}' not in df:
                 df.ta.ema(length=s, append=True, col_names=(f'EMA{s}',))
             if f'SMA{s}' not in df:
                 df.ta.sma(length=s, append=True, col_names=(f'SMA{s}',))
+
+            """
             if f'fwma{s}' not in df:
                 df.ta.fwma(length=s, append=True, col_names=(f'fwma{s}',))
             if f'tema{s}' not in df:
                 df.ta.tema(length=s, append=True, col_names=(f'tema{s}',))
-            if f'wma{s}' not in df:
-                df.ta.wma(length=s, append=True, col_names=(f'wma{s}',))
+            if f't3_{s}' not in df:
+                df.ta.t3(length=s, append=True, col_names=(f't3_{s}',))
             if f'zlma{s}' not in df:
                 df.ta.zlma(length=s, append=True, col_names=(f'zlma{s}',))
+            """
 
             # Precalculate "previous" values to confirm crossing using one row
             df[f'EMA{s}_prev'] = df[f'EMA{s}'].shift(1)
             df[f'SMA{s}_prev'] = df[f'SMA{s}'].shift(1)
+            """
             df[f'fwma{s}_prev'] = df[f'fwma{s}'].shift(1)
             df[f'tema{s}_prev'] = df[f'tema{s}'].shift(1)
-            df[f'wma{s}_prev'] = df[f'wma{s}'].shift(1)
+            df[f't3_{s}_prev'] = df[f't3_{s}'].shift(1)
             df[f'zlma{s}_prev'] = df[f'zlma{s}'].shift(1)
+            """
 
-            params += [f'EMA{s}', f'SMA{s}', f'fwma{s}', f'tema{s}', f'wma{s}', f'zlma{s}']
+            params += [f'EMA{s}', f'SMA{s}']  # , f'fwma{s}', f'tema{s}', f't3_{s}', f'zlma{s}']
 
         def calc_volatility(highs, lows):
             return highs.max() - lows.min()
@@ -88,7 +93,7 @@ def run_me(ticker, progress_value) -> list:
         df.to_parquet(file_name)
 
     # Cut on history and evaluation dataset:
-    df_last_month = df.iloc[-180:]  # we need to include 20 hours of history, but we will not make deals
+    df_last_month = df.iloc[-120:]  # we need to include 20 hours of history, but we will not make deals
                                     # for the first 20 hours and last 5 hours of this data frame
     df = df.iloc[:-160]  # cut here the last month (we trade first 20 days, and also waiting for all results 20 days more
 
@@ -109,7 +114,7 @@ def run_me(ticker, progress_value) -> list:
                         if row[s] > row[b] and row[f'{s}_prev'] < row[f'{b}_prev']:
                             buy_price = df['Open'].values[i + 1]
                             stop_loss = buy_price - row['Volatility'] / 2
-                            take_profit = buy_price + 4 * abs(stop_loss - buy_price)
+                            take_profit = buy_price + 5 * abs(stop_loss - buy_price)
                             profit = 0
 
                             if abs(stop_loss - buy_price) / buy_price < 0.03:
@@ -128,7 +133,7 @@ def run_me(ticker, progress_value) -> list:
 
                 # if we had some good cases in the history and win rate is good,
                 # we hope it will also work for us in the future (but no guarantee)
-                if len(RESULTS) > 10:
+                if len(RESULTS) > 2:
                     win_rate = 100 * passed / (passed + failed)
                     if win_rate > 60:
                         WW.append({'combo': [s, b], 'win rate': win_rate})
@@ -194,9 +199,9 @@ if __name__ == "__main__":
     print('Preparing training dataset...')
 
     TICKERS = get_tickers_polygon(limit=5000)  # this is for shares
-    TICKERS = TICKERS[:200]
+    TICKERS = TICKERS[:1000]
 
-    results = Parallel(n_jobs=-1, backend="multiprocessing", timeout=400)(
+    results = Parallel(n_jobs=-1, backend="multiprocessing", timeout=500)(
         delayed(run_me)(ticker, 100*e/len(TICKERS)) for e, ticker in enumerate(TICKERS)
     )
 
