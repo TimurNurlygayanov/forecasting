@@ -1,4 +1,6 @@
 # based on this idea https://www.youtube.com/watch?v=3zI_l_P-lF8
+# current money: 10000 -> 11573.94, results: 716 with 1:4 risk reward and "all emas for all tickers"
+# Win Rate: 12.15
 #
 import random
 import warnings
@@ -30,19 +32,26 @@ def calculate_volatility(high_window, low_window):
 
 # TICKERS = [t[2:] for t in sorted(ALL_TICKERS)]  # this is for forex
 ALL_OPERATIONS = []
-max_days = 200  # collect data for about 5 years
+max_days = 100  # collect data for about 5 years
+ema_support_data = {}
 
 
 def run_me(ticker, day=0, progress_value=0) -> tuple:
+    global ema_support_data
+
+    if ticker not in ema_support_data:
+        return 0, 0, 0
+
     # first - calculate EMAs so we have this data
     file_name = f'collect_data/calculated/h_{ticker}.parquet'
     if os.path.isfile(file_name):
         df = pd.read_parquet(file_name)
 
-        df.ta.ema(length=7, append=True, col_names=(f'EMA3',))  # we take this instead of price itself
+        df.ta.ema(close='Low', length=3, append=True, col_names=(f'EMA3',))  # we take this instead of price itself
         df['EMA3_prev'] = df['EMA3'].shift(1)
+        df['Close_prev'] = df['Close'].shift(1)
 
-        for e in range(50, 150, 10):
+        for e in range(50, 210, 10):
             df.ta.ema(length=e, append=True, col_names=(f'EMA{e}',))  # we take this instead of price itself
             df[f'EMA{e}_prev'] = df[f'EMA{e}'].shift(1)
 
@@ -56,10 +65,18 @@ def run_me(ticker, day=0, progress_value=0) -> tuple:
 
         # if row['EMA21'] > row['EMA50'] and row_prev['EMA21'] < row_prev['EMA50']:
         stop_loss = 0
+        """
         for e in range(50, 150, 10):
             if row['EMA3'] < row[f'EMA{e}'] and row['EMA3_prev'] > row[f'EMA{e}_prev']:
                 perform = 1
-                stop_loss = row[f'EMA{e}'] - row['ATR']
+                stop_loss = row[f'EMA{e}'] - row['ATR']  # /2 ?
+        """
+
+        for case in ema_support_data[ticker]:
+            s = case['indicator']
+            if row['Close'] < row[s] + row['ATR']/2 and row['Close_prev'] > row[f'{s}_prev'] + row['ATR']/2:
+                perform = 1
+                stop_loss = row[s] - row['ATR']
 
         if perform:
             buy_price = df['Open'].values[day + 1]
@@ -105,7 +122,10 @@ if __name__ == "__main__":
     print('Preparing training dataset...')
 
     TICKERS = get_tickers_polygon(limit=5000)  # this is for shares
-    # TICKERS = TICKERS[:1000]
+    TICKERS = TICKERS[:1000]
+
+    with open('collect_data/ema_support_data.txt', encoding='utf-8', mode='r') as f:
+        ema_support_data = json.load(f)
 
     current_deals = []
     current_free_money = 10000
@@ -137,20 +157,24 @@ if __name__ == "__main__":
                 n = int(700/buy_price)
 
                 if n > 1 and current_free_money > n * buy_price:  # buy only if we can buy at least 1 share
-                        total_price = n * buy_price
-                        current_free_money -= total_price
-                        current_deals.append({
-                            't': t, 'c': n, 'buy_price': buy_price,
-                            'stop_loss': stop_loss, 'take_profit': take_profit
-                        })
+                    total_price = n * buy_price
+                    current_free_money -= total_price
+                    current_deals.append({
+                        't': t, 'c': n, 'buy_price': buy_price,
+                        'stop_loss': stop_loss, 'take_profit': take_profit
+                    })
 
-                        print(f'Buy {t} for total ${buy_price*n:.2f}')
+                    print(f'Buy {t} for total ${buy_price*n:.2f} at price {buy_price:.2f}')
 
 
         money = current_free_money
         for d in current_deals:
             # do not sell but pretend we sell right away now
-            money += quick_sell(ticker=d['t'], chunk=d['c'], i=hour)
+            quick_prof = quick_sell(ticker=d['t'], chunk=d['c'], i=hour)
+            money += quick_prof
+
+            print(d, quick_prof/d['c'])
+
 
         print(f'  Step {i} current money: {money:.2f}, results: {len(total_results)}')
 
@@ -163,3 +187,6 @@ if __name__ == "__main__":
     print('* ' * 20)
     print(f'current money: {current_free_money:.2f}, results: {len(total_results)}')
     print(f'Win Rate: {100 * sum([1 for r in total_results if r > 0]) / len(total_results):.2f} ')
+
+    print(total_results)
+    print(sum(total_results))

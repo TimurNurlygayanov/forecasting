@@ -1,8 +1,12 @@
-
+import json
 import warnings
 
 warnings.filterwarnings('ignore', category=Warning)
 warnings.filterwarnings("ignore", message="urllib3")
+
+
+import asyncio
+import datetime
 
 from bot.utils import get_data
 from bot.utils import get_tickers_polygon
@@ -11,13 +15,33 @@ import numpy as np
 from scipy.signal import argrelextrema
 
 from joblib import Parallel, delayed
-from utils import draw
-from utils import calculate_atr
-from utils import find_nakoplenie
-from utils import check_for_bad_candles
-from utils import search_for_bsu
-from utils import check_podzhatie
-from utils import check_simple_lp
+from gerchik.utils import draw
+from gerchik.utils import calculate_atr
+from gerchik.utils import check_for_bad_candles
+from gerchik.utils import check_podzhatie
+from gerchik.utils import check_simple_lp
+
+from alpha.broker import send_stop_order
+from bot.bot import bot
+
+
+deal_size = 500
+
+
+async def send_message(msg):
+    chat_id = "335442091"
+    await bot.send_message(chat_id=chat_id, text=msg, parse_mode='Markdown')
+
+
+def send_telegram_notification(msg):
+    # Start the event loop
+    loop = asyncio.get_event_loop()
+
+    # Run the async function
+    loop.run_until_complete(send_message(msg))
+
+    # Close the event loop
+    loop.close()
 
 
 def run_me(ticker, progress=0):
@@ -29,35 +53,32 @@ def run_me(ticker, progress=0):
         df.index = df.index.strftime('%b %d')
     except Exception as e:
         print(e)
-        return ticker, 0
+        return ticker, -100
 
     if df is None or df.empty or len(df) < 50:
-        return ticker, 0
+        return ticker, -100
 
     df_original = df.copy()
-    df = df.iloc[:-5]  # cut the last day to check
+    df = df.iloc[:-2]  # cut the last day to check
 
     average_volume = (sum(df['volume'].tolist()) / len(df)) // 1000
     if average_volume < 300:  # only take shares with 1M+ average volume
-        return ticker, 0
+        return ticker, -100
 
     current_price = df['Close'].tolist()[-1]
     if 1 > current_price or current_price > 100:
-        return ticker, 0  # ignore penny stocks and huge stocks
+        return ticker, -100  # ignore penny stocks and huge stocks
 
     atr = calculate_atr(df)
     if check_for_bad_candles(df, atr):
-        return ticker, 0
+        return ticker, -100
 
     lows = df['Low'].tolist()
     highs = df['High'].tolist()
     open_prices = df['Open'].tolist()
     close_prices = df['Close'].tolist()
 
-    stop_loss = 0.1 * atr
     luft = 0.02 * atr
-    order_price = 0
-    stop_price = 0
 
     found_signal = False
     levels = []
@@ -83,16 +104,17 @@ def run_me(ticker, progress=0):
                     level_l = 0
 
             if level_h:
-                levels.append(level_h)
+                levels.append({'price': level_h, 'type': 'paranormal bars level'})
             if level_l:
-                levels.append(level_l)
+                levels.append({'price': level_h, 'type': 'paranormal bars level'})
 
+    # Check if nearest Highs or Lows form new level:
     if abs(highs[-1] - highs[-2]) < 0.02 or abs(highs[-1] - highs[-3]) < 0.02 or abs(highs[-1] - highs[-4]) < 0.02:
-        levels.append(highs[-1])
+        levels.append({'price': highs[-1], 'type': 'nearest high'})
     if abs(lows[-1] - lows[-2]) < 0.02 or abs(lows[-1] - lows[-3]) < 0.02 or abs(lows[-1] - lows[-4]) < 0.02:
-        levels.append(lows[-1])
+        levels.append({'price': lows[-1], 'type': 'nearest high'})
 
-    #  limit + mirror levels search
+    # Limit + mirror levels search
 
     prices = sorted(highs + lows)
     bars_required = 3
@@ -107,13 +129,13 @@ def run_me(ticker, progress=0):
             if len(group) >= bars_required:
                 level = min(group)
 
-                levels.append(level)
+                levels.append({'price': level, 'type': 'mirror level'})
 
             group = []
 
         previous_price = p
 
-    # izlom trenda search
+    # Izlom trenda search
 
     border = 10
 
@@ -126,14 +148,14 @@ def run_me(ticker, progress=0):
     local_maxima = df.iloc[maxima_idx]
 
     for i, (index, row) in enumerate(local_minima.iterrows()):
-        levels.append(row['Low'])
+        levels.append({'price': row['Low'], 'type': 'izlom trenda'})
 
     for i, (index, row) in enumerate(local_maxima.iterrows()):
-        levels.append(row['High'])
+        levels.append({'price': row['High'], 'type': 'izlom trenda'})
 
     level = check_podzhatie(df)
     if level > 0:
-        levels.append(level)
+        levels.append({'price': level, 'type': 'podzhatie'})
 
     # Choosing the right level:
 
@@ -143,67 +165,79 @@ def run_me(ticker, progress=0):
 
         k = 0
         for i in range(0, len(df)):
-            if lows[-i] < level < highs[-i]:
+            if lows[-i] < level['price'] < highs[-i]:
                 k += 1
 
-            if lows[-i] > level:
+            if lows[-i] > level['price']:
                 k += 1
 
         if k < 2:
-            if highs[-1] > level and open_prices[-1] < level and close_prices[-1] < level:
+            if highs[-1] > level['price'] and open_prices[-1] < level['price']:  # and close_prices[-1] > level:
                 found_signal = True
                 selected_level = level
 
     if found_signal:
-        buy_price = selected_level
-        stop_loss = selected_level + 0.2 * atr
-        take_profit = selected_level - 7 * abs(buy_price - stop_loss)
+        buy_price = selected_level['price'] - luft
+        stop_loss = buy_price + 0.2 * atr
+        take_profit = buy_price - 7 * abs(buy_price - stop_loss)
 
         # If we didn't spend enough fuel (ATR) or we spent too much - do not trade this
-        previous_close = df['Close'].values[-2]
-        proshli_do_urovnia = 100 * abs(selected_level - previous_close) / atr
+        previous_close = df['Open'].values[-1]
+        proshli_do_urovnia = 100 * abs(selected_level['price'] - previous_close) / atr
         if proshli_do_urovnia < 50 or proshli_do_urovnia > 300:
             return ticker, 0
         ####
 
-        boxes = [
-            check_simple_lp(
-                df, selected_level, atr,
-                buy_price, stop_loss, take_profit
-            )
-        ]  # [check_scenario(df, selected_level)]
+        """
+        boxes = []
         levels_to_draw = []
 
         draw(
-            df_original.iloc[-70:].copy(), file_name=f'{ticker}', ticker=ticker,
-            level=selected_level, boxes=boxes, second_levels=levels_to_draw, future=0,
+            df_original.iloc[-40:].copy(), file_name=f'{ticker}', ticker=ticker,
+            level=selected_level['price'], boxes=boxes, second_levels=levels_to_draw, future=0,
             buy_price=buy_price, stop_loss=stop_loss, take_profit=take_profit, buy_index=df.index.values[-1],
             zig_zag=False,
         )
-
         """
-        try:
-            df_hour = get_data(ticker, period='hour', days=10, save_data=False)
 
-            draw(
-                df_hour, file_name=f'{ticker}_h', ticker=ticker,
-                level=selected_level, boxes=[], second_levels=levels_to_draw, future=0,
-                zig_zag=True,
-            )
-        except:
-            pass
-        """
+        # TODO check here if we have open position for this ticker already
+
+        quantity = round(deal_size / buy_price)
+        send_stop_order(ticker, 'SELL', quantity, price=buy_price, stop_loss=stop_loss, take_profit=take_profit)
+
+        msg = f'Sell order *{ticker}* for ${buy_price:.2f} and stop loss: ${stop_loss:.2f}'
+        send_telegram_notification(msg)
 
     return ticker, 0
 
 
 if __name__ == "__main__":
-    print('Starting threads...')
-    TICKERS = get_tickers_polygon(limit=5000)  # 2000
-    total_results = []
+    # Do not run this script on weekends
+    if datetime.datetime.now().weekday() > 5:
+        exit(0)
 
-    Parallel(n_jobs=-1, max_nbytes='200M', backend="multiprocessing", timeout=100)(
-        delayed(run_me)(ticker, 100*i/len(TICKERS)) for i, ticker in enumerate(TICKERS)
-    )
+    # Only look for opportunities from 15:00 to 20:00 by Berlin
+    if 15 <= datetime.datetime.now().hour <= 20:
 
-    print()
+        print('Starting threads...')
+        TICKERS = get_tickers_polygon(limit=5000)  # 2000
+        total_results = []
+
+        with open('bad_tickers.json', encoding='utf=8', mode='r') as f:
+            bad_tickers = json.load(f)
+
+        # we filter bad tickers beforehand to not waste time in the future
+        TICKERS = [t for t in TICKERS if t not in bad_tickers]
+
+        result = Parallel(n_jobs=-1, max_nbytes='200M', backend="multiprocessing", timeout=100)(
+            delayed(run_me)(ticker, 100*i/len(TICKERS)) for i, ticker in enumerate(TICKERS)
+        )
+
+        for r in result:
+            if r[1] == -100:
+                bad_tickers.append(r[0])
+
+        with open('bad_tickers.json', encoding='utf=8', mode='w+') as f:
+            json.dump(bad_tickers, f)
+
+        print()

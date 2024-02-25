@@ -1,4 +1,8 @@
 
+import warnings
+
+warnings.filterwarnings('ignore', category=UserWarning)
+
 import os
 import random
 
@@ -168,6 +172,7 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
             df.sort_index(inplace=True)
             df.index = pd.to_datetime(df.index)
 
+            """
             df.ta.ema(close='Low', length=21, append=True, col_names=('EMA21_low',))
             df.ta.ema(close='Low', length=9, append=True, col_names=('EMA9_low',))
             df.ta.ema(length=7, append=True, col_names=('EMA7',))
@@ -187,6 +192,7 @@ def get_data(ticker='AAPL', period='minute', multiplier=1, save_data=True, days=
             df.ta.atr(append=True, col_names=('ATR',))
 
             df.ta.adx(append=True, col_names=('ADX', 'DMP', 'DMN'))
+            """
 
             if save_data:
                 df.to_parquet(file_name)  # , index=True, header=True

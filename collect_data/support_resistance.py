@@ -30,11 +30,15 @@ results = {}
 def run_me(ticker):
     global results
 
+    results[ticker] = []
+
     file_name = f'collect_data/calculated/h_{ticker}.parquet'
 
     if os.path.isfile(file_name):
         df = pd.read_parquet(file_name)
-        df.ta.ema(length=3, append=True, col_names=(f'EMA3',))  # we take this instead of price itself
+        df = df.iloc[:-100].copy()
+
+        df.ta.ema(close='Low', length=3, append=True, col_names=(f'EMA3',))  # we take this instead of price itself
         df['EMA3_prev'] = df['EMA3'].shift(1)
 
         for e in range(50, 200, 10):
@@ -47,7 +51,7 @@ def run_me(ticker):
 
             for i, (index, row) in enumerate(df.iterrows()):
                 if i > e:
-                    if row['EMA3'] < row[f'EMA{e}'] and row['EMA3_prev'] > row[f'EMA{e}_prev']:
+                    if row['EMA3'] < row[f'EMA{e}'] + row['ATR']/2 and row['EMA3_prev'] > row[f'EMA{e}_prev'] + row['ATR']/2:
                         crossed = 1
 
                     if crossed:
@@ -59,7 +63,7 @@ def run_me(ticker):
                             crossed = 0
                             break_out += 1
 
-            results[f'EMA{e}'] = {'bounce': bounce, 'break_out': break_out}
+            results[ticker].append({'indicator': f'EMA{e}', 'bounce': bounce, 'break_out': break_out})
 
             if bounce + break_out > 4:
                 if bounce / (bounce + break_out) > 0.5 and bounce > 4:
@@ -74,3 +78,6 @@ if __name__ == "__main__":
 
     for t in TICKERS:
         run_me(ticker=t)
+
+    with open('collect_data/ema_support_data.txt', encoding='utf-8', mode='w+') as f:
+        json.dump(results, f)
