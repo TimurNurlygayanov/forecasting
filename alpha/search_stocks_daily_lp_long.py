@@ -19,13 +19,13 @@ from gerchik.utils import draw
 from gerchik.utils import calculate_atr
 from gerchik.utils import check_for_bad_candles
 from gerchik.utils import check_podzhatie
-from gerchik.utils import check_simple_lp
 
 from alpha.broker import send_stop_order
+from alpha.broker import get_account_balance
 from bot.bot import bot
 
 
-deal_size = 500
+deal_size = 1000
 
 
 async def send_message(msg):
@@ -45,7 +45,14 @@ def send_telegram_notification(msg):
 
 
 def run_me(ticker, progress=0):
-    print(f'  Loading data... {progress:.2f}% done     ', end='\r')
+    # print(f'  Loading data... {progress:.2f}% done     ', end='\r')
+
+    with open('positions.json', mode='r', encoding='utf-8') as f:
+        positions = json.load(f)
+
+    # Make sure we do not send duplicated orders
+    if ticker in positions:
+        return ticker, 0
 
     try:
         # take additional 150 days to identify levels properly
@@ -59,7 +66,7 @@ def run_me(ticker, progress=0):
         return ticker, -100
 
     df_original = df.copy()
-    df = df.iloc[:-2]  # cut the last day to check
+    # df = df.iloc[:-2]  # cut the last day to check
 
     average_volume = (sum(df['volume'].tolist()) / len(df)) // 1000
     if average_volume < 300:  # only take shares with 1M+ average volume
@@ -168,22 +175,27 @@ def run_me(ticker, progress=0):
             if lows[-i] < level['price'] < highs[-i]:
                 k += 1
 
-            if lows[-i] > level['price']:
+            # This is for short orders with LP
+            # if lows[-i] > level['price']:
+            #     k += 1
+
+            # This is for long orders with LP
+            if highs[-i] < level['price']:
                 k += 1
 
         if k < 2:
-            if highs[-1] > level['price'] and open_prices[-1] < level['price']:  # and close_prices[-1] > level:
+            if lows[-1] < level['price'] < open_prices[-1] and close_prices[-1] < level['price']:
                 found_signal = True
                 selected_level = level
 
     if found_signal:
-        buy_price = selected_level['price'] - luft
-        stop_loss = buy_price + 0.2 * atr
-        take_profit = buy_price - 7 * abs(buy_price - stop_loss)
+        buy_price = round(selected_level['price'] + luft, 2)
+        stop_loss = round(buy_price - 0.3 * atr, 2)
+        take_profit = round(buy_price + 10 * abs(buy_price - stop_loss), 2)   # 3 takes - one on x7, one on x10 one on x20
 
         # If we didn't spend enough fuel (ATR) or we spent too much - do not trade this
-        previous_close = df['Open'].values[-1]
-        proshli_do_urovnia = 100 * abs(selected_level['price'] - previous_close) / atr
+        previous_open = df['Open'].values[-1]
+        proshli_do_urovnia = 100 * abs(selected_level['price'] - previous_open) / atr
         if proshli_do_urovnia < 50 or proshli_do_urovnia > 300:
             return ticker, 0
         ####
@@ -201,23 +213,46 @@ def run_me(ticker, progress=0):
         """
 
         # TODO check here if we have open position for this ticker already
+        try:
+            quantity = round(deal_size / buy_price)
+            delta_price = round(buy_price + 0.1 * atr, 2)  # delta price helps to create Stop Limit order
+            send_stop_order(
+                ticker, 'BUY', quantity, price=buy_price, delta_price=delta_price,
+                stop_loss=stop_loss, take_profit=take_profit
+            )
+        except Exception as e:
+            print(f'Failed to send an order: {e}')
+            send_telegram_notification(f'Failed to send an order: {e}')
 
-        quantity = round(deal_size / buy_price)
-        send_stop_order(ticker, 'SELL', quantity, price=buy_price, stop_loss=stop_loss, take_profit=take_profit)
+        account_balance = get_account_balance()
 
-        msg = f'Sell order *{ticker}* for ${buy_price:.2f} and stop loss: ${stop_loss:.2f}'
-        send_telegram_notification(msg)
+        try:
+            msg = f'Buy order *{ticker}* for ${buy_price:.2f} and stop loss: ${stop_loss:.2f}\n'
+            msg += f'Stop loss {100 * abs(stop_loss-buy_price) / buy_price:.2f}%\n'
+            msg += f'Take profit {100 * abs(take_profit - buy_price) / buy_price:.2f}%\n'
+            msg += f'Account Balance: {account_balance}'
+            send_telegram_notification(msg)
+        except:
+            pass
+
+        # TODO - learn how to extract tickers from broker data, do not save it locally
+        with open('positions.json', mode='w+', encoding='utf-8') as f:
+            positions.append(ticker)
+            json.dump(positions, f)
 
     return ticker, 0
 
 
 if __name__ == "__main__":
-    # Do not run this script on weekends
-    if datetime.datetime.now().weekday() > 5:
+    print(f'{datetime.datetime.now().strftime("%b %d %Y %H:%M:%S")}')
+
+    # Do not run this script on weekends (Monday == 0)
+    if datetime.datetime.now().weekday() >= 5:
+        print('Non working day, skipping')
         exit(0)
 
-    # Only look for opportunities from 15:00 to 20:00 by Berlin
-    if 15 <= datetime.datetime.now().hour <= 20:
+    # Only look for opportunities from 15:00 to 21:00 by Berlin
+    if 15 <= datetime.datetime.now().hour <= 21:
 
         print('Starting threads...')
         TICKERS = get_tickers_polygon(limit=5000)  # 2000
@@ -241,3 +276,5 @@ if __name__ == "__main__":
             json.dump(bad_tickers, f)
 
         print()
+    else:
+        print('Outside of the working hours, skipping')

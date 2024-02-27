@@ -1,1 +1,12 @@
 ib_insync
+numpy
+scipy
+joblib
+python-telegram-bot
+pandas_datareader
+polygon-api-client
+pandas_ta
+pandas
+zigzag
+numpy
+plotly

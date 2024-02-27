@@ -1,3 +1,5 @@
+import time
+
 from ib_insync import IB
 from ib_insync import Stock
 from ib_insync import Crypto
@@ -9,40 +11,58 @@ ib_host = '127.0.0.1'
 ib_port = 4001
 
 
-def send_stop_order(ticker, order_type, quantity, price, stop_loss, take_profit):
+def send_stop_order(ticker, order_type, quantity, price, delta_price, stop_loss, take_profit):
     # Connect to TWS or Gateway
     ib = IB()
     ib.connect(ib_host, ib_port, clientId=1)
 
-    # Define contract (replace with your contract details)
-    contract = Stock(ticker, 'SMART', 'USD')
+    # Define contract
+    contract = Stock(symbol=ticker, exchange='SMART', currency='USD')
 
-    # Place bracket order
+    # Bracket order
     # https://ib-insync.readthedocs.io/api.html#ib_insync.ib.IB.bracketOrder
-    order_id = ib.bracketOrder(order_type, quantity, price, take_profit, stop_loss, contract=contract)
+    order_details = ib.bracketOrder(
+        action=order_type, quantity=quantity, stopPrice=delta_price,
+        limitPrice=price, takeProfitPrice=take_profit, stopLossPrice=stop_loss
+    )
+
+    for order in order_details:
+        order.contract = contract
+        res = ib.placeOrder(contract, order)
+        print(res)
+
+        ib.sleep(1)
+        print(res.orderStatus)
+
+    # Request all open orders
+    all_open_orders = ib.reqAllOpenOrders()
+
+    print('* ' * 20)
+    print('All open orders:')
+    for order in all_open_orders:
+        print(order)
 
     # Disconnect from TWS or Gateway
     ib.disconnect()
+    time.sleep(1)  # give some time to properly disconnect
 
-    return order_id
 
-
-def get_active_orders():
+def get_active_trades():
     # Connect to TWS or Gateway
     ib = IB()
     ib.connect(ib_host, ib_port, clientId=1)
 
     # Request a list of all open orders
-    open_orders = ib.reqOpenOrders()
+    open_trades = ib.trades()
 
     # Print details of each open order
-    for order in open_orders:
-        print("Open Order:", order)
+    for trade in open_trades:
+        print("Open Order:", trade)
 
     # Disconnect from TWS or Gateway
     ib.disconnect()
 
-    return open_orders
+    return open_trades
 
 
 def get_pending_orders():
@@ -50,26 +70,8 @@ def get_pending_orders():
     ib = IB()
     ib.connect(ib_host, ib_port, clientId=1)
 
-    # Request real-time updates for account information
-    res = ib.client.reqAllOpenOrders()
-    print(res)
-
-    # Wait for account updates
-    ib.sleep(5)
-
-    r = ib.trades()
-    print(r)
-    r = ib.orders()
-    print(r)
-
     # Request all open trades
-    open_trades = ib.openTrades()
-
-    # Filter pending orders from the list of open trades
-    pending_orders = [
-        trade.order for trade in open_trades
-        if trade.orderStatus.status in ['Pending', 'PendingSubmit']
-    ]
+    pending_orders = ib.openOrders()
 
     # Print details of pending orders
     for order in pending_orders:
@@ -86,7 +88,8 @@ def cancel_order(order):
     ib = IB()
     ib.connect(ib_host, ib_port, clientId=1)
 
-    ib.cancelOrder(order.orderId)
+    ib.cancelOrder(order)
+    ib.sleep(2)
 
     # Disconnect from TWS or Gateway
     ib.disconnect()
@@ -108,40 +111,10 @@ def get_account_balance():
 
     # Disconnect from TWS or Gateway
     ib.disconnect()
+    time.sleep(1)  # give some time to properly diconnect
 
     return available_amount
 
 
-get_account_balance()
-
-ib = IB()
-ib.connect(ib_host, ib_port, clientId=1)
-# Define contract for Bitcoin (BTCUSD)
-contract = Stock(symbol='AAPL', exchange='SMART', currency='USD')
-
-
-# Place the bracket order for Bitcoin
-order_details = ib.bracketOrder(action='SELL', quantity=1, limitPrice=180, takeProfitPrice=160, stopLossPrice=181)
-
-for order in order_details:
-    order.contract = contract
-    res = ib.placeOrder(contract, order)
-    print(res)
-
-    ib.sleep(2)
-    print(res.orderStatus)
-
-# Request all open orders
-all_open_orders = ib.reqAllOpenOrders()
-
-# Print details of all open orders
-for order in all_open_orders:
-    print("Open Order:", order)
-
-ib.disconnect()
-
-get_account_balance()
-
-test = get_pending_orders()
-test2 = get_active_orders()
-print(test)
+# get_account_balance()
+# get_active_trades()

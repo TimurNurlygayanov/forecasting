@@ -11,10 +11,6 @@ import plotly.io as pio
 from plotly.graph_objs.layout.shape import Label
 import plotly.graph_objects as go
 
-from detecto.core import Dataset
-from detecto.core import Model
-from detecto.utils import read_image
-from pathlib import Path
 import warnings
 
 import numpy as np
@@ -150,25 +146,6 @@ def draw(df, file_name='', level=0, ticker='', boxes=None, future=0, second_leve
         graph, f'training_data/{file_name}.png',
         height=1000, width=2000
     )
-
-
-def detect(image_name, train=False):
-    dataset = Dataset('/Users/timur.nurlygaianov/forecasting/marked_images')
-
-    labels = ['p']
-
-    model_name = 'saved_model.pth'
-    if train:
-        model = Model(labels)
-        losses = model.fit(dataset)  # , epochs=15, learning_rate=0.001, verbose=True
-        model.save(model_name)
-    else:
-        model = Model.load(model_name, labels)
-
-    image = read_image(image_name)
-
-    labels, boxes, scores = model.predict(image)
-    return labels, boxes, scores
 
 
 def calculate_atr(df):

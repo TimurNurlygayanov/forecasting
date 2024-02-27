@@ -117,7 +117,8 @@ def run_me(ticker, diff_days=30, progress=0):
     if df_original is None or df_original.empty or len(df_original) < diff_days + 50:
         return ticker, 0
 
-    df = df_original.iloc[:-diff_days].copy()
+    # df = df_original.iloc[:-diff_days].copy()
+    df = df_original.copy()
 
     average_volume = (sum(df['volume'].tolist()) / len(df)) // 1000
     if average_volume < 300:  # only take shares with 1M+ average volume
@@ -228,11 +229,11 @@ def run_me(ticker, diff_days=30, progress=0):
             if lows[-i] < level < highs[-i]:
                 k += 1
 
-            if lows[-i] > level:
+            if highs[-i] < level:
                 k += 1
 
         if k < 2:
-            if highs[-1] > level and open_prices[-1] < level and close_prices[-1] < level:
+            if lows[-1] < level < open_prices[-1] and close_prices[-1] > level:
                 found_signal = True
                 selected_level = level
 
@@ -315,31 +316,7 @@ if __name__ == "__main__":
     TICKERS = get_tickers_polygon(limit=5000)  # 2000
     total_results = []
 
-    for days in range(30, 35):
-        # max_nbytes='200M',
-        RESULTS = Parallel(n_jobs=7, backend="multiprocessing", timeout=100)(
-            delayed(run_me)(ticker, days, 100*i/len(TICKERS)) for i, ticker in enumerate(TICKERS)
-        )
-
-        print('= ' * 20)
-
-        good_results = [r for r in RESULTS if r[1] > 0]
-        bad_results = [r for r in RESULTS if r[1] < 0]
-
-        print(f'Day {days}')
-        print(f'{len(good_results)} of good trades, {len(bad_results)} of bad trades')
-
-        if len(good_results + bad_results) > 0:
-            print(f'{100 * len(good_results) / (len(good_results + bad_results)):.2f}% of successful trades')
-
-        print('= ' * 20)
-        print()
-
-        total_results += good_results + bad_results
-
-    print('* ' * 20)
-    good_results = [r for r in total_results if r[1] > 0]
-    bad_results = [r for r in total_results if r[1] < 0]
-    print('Summary statistic:')
-    print(f'{len(good_results)} of good trades, {len(bad_results)} of bad trades')
-    print(f'{100 * len(good_results) / (len(good_results + bad_results)):.2f}% of successful trades')
+    # max_nbytes='200M',
+    RESULTS = Parallel(n_jobs=7, backend="multiprocessing", timeout=100)(
+        delayed(run_me)(ticker, 0, 100*i/len(TICKERS)) for i, ticker in enumerate(TICKERS)
+    )
